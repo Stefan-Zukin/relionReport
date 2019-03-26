@@ -93,28 +93,49 @@ with open(runJob, "r") as f:
         if l.startswith("Number of classes"):
             numClasses = (int)(l.split("== ")[1])
 
-# Iterate through model.star files, reading the class distribution
+"""
+Here we iterate through the model.star files, reading the data we want
+So far I'm taking the class distribution data and the estimated resolution data
+"""
 modelStars = glob.glob('*model.star')
 modelStars.sort(key=sortModelStars)
 classDict = {}
+resDict = {}
 it = 0
 for name in modelStars:
     filename = name
     df = parseStar(filename, "data_model_classes")
     classDist = []
+    resolution = []
     for column in df:
         if column == "rlnClassDistribution":
             classDist = list(df[column])
+        if column == "rlnEstimatedResolution":
+            resolution = list(df[column])
     classDict[it] = classDist
+    resDict[it] = resolution
     it += 1
     # print(df)
 cd = pd.DataFrame.from_dict(classDict, orient='index')
+rs = pd.DataFrame.from_dict(resDict, orient = 'index' )
+
+
+"""
+Setting up the tables to be graphed
+"""
 headers = []
 legend = ''
 for i in range(numClasses):
     headers.append("class" + str(i))
     legend += str(i+1)
 cd.columns = headers
+rs.columns = headers
+print(cd)
+print(rs)
+
+"""
+Graphing the distribution data
+"""
 maxDist = cd.max(axis=0).max()
 minDist = cd.min(axis=0).min()
 ymax = maxDist + .06
@@ -123,14 +144,29 @@ if ymax > 1:
     ymax = 1
 if ymin < 0:
     ymin = 0
-
-# Plotting
 cd.plot(use_index=True, linewidth=2.5)
-plt.legend(legend, ncol=2, loc='upper left')
+plt.legend(legend, ncol=2, loc='upper left', title="Classes")
 plt.ylim(ymin, ymax)
 plt.grid(linestyle='-', linewidth=.2)
 plt.xlabel('Iteration')
 plt.ylabel('Distribution')
+
+"""
+Graphing the resolution data
+"""
+maxRes = rs.max(axis=0).max()
+minRes = rs.min(axis=0).min()
+ymax = maxRes + 2
+ymin = minRes -1
+if ymin < 0:
+    ymin = 0
+rs.plot(use_index=True, linewidth = 2.5)
+plt.legend(legend, ncol=2, loc='upper left', title="Classes")
+plt.ylim(ymin, ymax)
+plt.grid(linestyle='-', linewidth=.2)
+plt.xlabel('Iteration')
+plt.ylabel('Resolution (A)')
+
 plt.show()
 
 # Read the data.star files, iterating through them
