@@ -5,9 +5,10 @@ import glob
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sb
 
-#ParesStar function taken from PyEM
+# ParesStar function taken from PyEM
+
+
 def parseStar(starFile, tableName, keep_index=False, augment=False):
     headers = []
     foundTable = False
@@ -22,7 +23,7 @@ def parseStar(starFile, tableName, keep_index=False, augment=False):
             else:
                 ln += 1
                 if foundheader and not lastheader:
-                    #Don't add to skipped line value if I'm reading the data
+                    # Don't add to skipped line value if I'm reading the data
                     ln -= 1
             if(foundTable):
                 if l.startswith("_"):
@@ -36,17 +37,25 @@ def parseStar(starFile, tableName, keep_index=False, augment=False):
                 else:
                     lastheader = False
                 if foundheader and not lastheader:
-                    #Read through the data to see how long it is, record length in lb
-                    #Use this value in the pd.read_csv line
+                    # Read through the data to see how long it is, record length in lb
+                    # Use this value in the pd.read_csv line
                     if l.startswith(" "):
                         break
                     lb += 1
     # print("ln:" + str(ln))
     # print("lb:" + str(lb))
-    df = pd.read_csv(starFile, skiprows=ln, delimiter='\s+', nrows=lb, header=None)
+    df = pd.read_csv(starFile, skiprows=ln,
+                     delimiter='\s+', nrows=lb, header=None)
     df.columns = headers
-    return df  #A PANDAS data frame object is returned
+    return df  # A PANDAS data frame object is returned
 
+
+def sortModelStars(model=" "):
+    s = model.split("it")
+    it = int(s[1][0:3])
+    if s[0].startswith("run_ct"):
+        it += 1
+    return it
 
 #     #Original ParesStar function taken from PyEM
 # def parseStar(starfile, keep_index=False, augment=False):
@@ -71,9 +80,9 @@ def parseStar(starFile, tableName, keep_index=False, augment=False):
 #     df = pd.read_csv(starfile, skiprows=ln, delimiter='\s+', header=None)
 #     df.columns = headers
 #     return df  #A PANDAS data frame object is returned
-        
 
-#Use the runJob file to determine the number of classes without having to iterate through the whole data.star file        
+
+# Use the runJob file to determine the number of classes without having to iterate through the whole data.star file
 runJob = glob.glob("run.job")[0]
 numClasses = 0
 micrographs = 0
@@ -81,9 +90,12 @@ with open(runJob, "r") as f:
     for l in f:
         if l.startswith("Number of classes"):
             numClasses = (int)(l.split("== ")[1])
-    
-#Iterate through model.star files, reading the class distribution
-modelStars = sorted(glob.glob('*model.star'))
+
+# Iterate through model.star files, reading the class distribution
+modelStars = glob.glob('*model.star')
+modelStars.sort(key=sortModelStars)
+for i in modelStars:
+    print(i)
 classDict = {}
 it = 0
 for name in modelStars:
@@ -106,16 +118,15 @@ for i in range(numClasses):
 cd.columns = headers
 print(cd.max)
 
-#Plotting
-sb.set()
-cd.plot(use_index=True, linewidth = 2.5)
+# Plotting
+cd.plot(use_index=True, linewidth=2.5)
 plt.legend(legend, ncol=2, loc='upper left')
-plt.ylim(0,plt.gca().get_ylim()[1] + .06)
+plt.ylim(0, plt.gca().get_ylim()[1] + .06)
 plt.xlabel('Iteration')
 plt.ylabel('Distribution')
 plt.show()
 
-#Read the data.star files, iterating through them
+# Read the data.star files, iterating through them
 # dataStars = glob.glob('*data.star')
 # it = 1
 # classDict = {}
@@ -141,7 +152,7 @@ plt.show()
 # plt.show()
 
 
-
-#TODO: This whole thing is more than I had to do. I don't actually have to read in all the data and then iterate through it, the 
-#Class distribution is stored in the model.star file, so I just have to read that in. I'll keep this code because it might be useful
-#But that will be a much faster way to do this.
+# TODO:
+# Plot resolution data for each class as well
+# Figure out how to combine it into a PDF
+# Look into getting images of the mrcs, not sure if it's possible.
