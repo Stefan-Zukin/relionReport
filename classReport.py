@@ -86,6 +86,8 @@ def sortModelStars(model=" "):
 runJob = glob.glob("run.job")[0]
 numClasses = 0
 micrographs = 0
+min = 1
+max = 0
 with open(runJob, "r") as f:
     for l in f:
         if l.startswith("Number of classes"):
@@ -94,12 +96,9 @@ with open(runJob, "r") as f:
 # Iterate through model.star files, reading the class distribution
 modelStars = glob.glob('*model.star')
 modelStars.sort(key=sortModelStars)
-for i in modelStars:
-    print(i)
 classDict = {}
 it = 0
 for name in modelStars:
-    # print("Reading " + name)
     filename = name
     df = parseStar(filename, "data_model_classes")
     classDist = []
@@ -113,15 +112,23 @@ cd = pd.DataFrame.from_dict(classDict, orient='index')
 headers = []
 legend = ''
 for i in range(numClasses):
-    headers.append("class_" + str(i))
+    headers.append("class" + str(i))
     legend += str(i+1)
 cd.columns = headers
-print(cd.max)
+maxDist = cd.max(axis=0).max()
+minDist = cd.min(axis=0).min()
+ymax = maxDist + .06
+ymin = minDist -.005
+if ymax > 1:
+    ymax = 1
+if ymin < 0:
+    ymin = 0
 
 # Plotting
 cd.plot(use_index=True, linewidth=2.5)
 plt.legend(legend, ncol=2, loc='upper left')
-plt.ylim(0, plt.gca().get_ylim()[1] + .06)
+plt.ylim(ymin, ymax)
+plt.grid(linestyle='-', linewidth=.2)
 plt.xlabel('Iteration')
 plt.ylabel('Distribution')
 plt.show()
