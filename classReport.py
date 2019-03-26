@@ -104,10 +104,15 @@ for i in range(numClasses):
     headers.append("class_" + str(i))
     legend += str(i+1)
 cd.columns = headers
-print(cd)
+print(cd.max)
 
-cd.plot(use_index=True)
-plt.legend(legend, ncol=2, loc='upper left');
+#Plotting
+sb.set()
+cd.plot(use_index=True, linewidth = 2.5)
+plt.legend(legend, ncol=2, loc='upper left')
+plt.ylim(0,plt.gca().get_ylim()[1] + .06)
+plt.xlabel('Iteration')
+plt.ylabel('Distribution')
 plt.show()
 
 #Read the data.star files, iterating through them
