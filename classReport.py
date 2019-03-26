@@ -6,9 +6,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# ParesStar function taken from PyEM
-
-
+# ParesStar function taken from PyEM, slightly modified to work with model.star files containing multiple tables
 def parseStar(starFile, tableName, keep_index=False, augment=False):
     headers = []
     foundTable = False
@@ -42,8 +40,6 @@ def parseStar(starFile, tableName, keep_index=False, augment=False):
                     if l.startswith(" "):
                         break
                     lb += 1
-    # print("ln:" + str(ln))
-    # print("lb:" + str(lb))
     df = pd.read_csv(starFile, skiprows=ln,
                      delimiter='\s+', nrows=lb, header=None)
     df.columns = headers
@@ -57,7 +53,8 @@ def sortModelStars(model=" "):
         it += 1
     return it
 
-#     #Original ParesStar function taken from PyEM
+#     #Original ParesStar function taken from PyEM, keep because it wasn't working when
+#     #I was looking up other tables besides data_model_classes
 # def parseStar(starfile, keep_index=False, augment=False):
 #     headers = []
 #     foundheader = False
@@ -94,7 +91,7 @@ with open(runJob, "r") as f:
             numClasses = (int)(l.split("== ")[1])
 
 """
-Here we iterate through the model.star files, reading the data we want
+Here we iterate through the model.star files, reading the data we want into PANDAS data frames
 So far I'm taking the class distribution data and the estimated resolution data
 """
 modelStars = glob.glob('*model.star')
@@ -115,10 +112,8 @@ for name in modelStars:
     classDict[it] = classDist
     resDict[it] = resolution
     it += 1
-    # print(df)
 cd = pd.DataFrame.from_dict(classDict, orient='index')
 rs = pd.DataFrame.from_dict(resDict, orient = 'index' )
-
 
 """
 Setting up the tables to be graphed
@@ -166,36 +161,8 @@ plt.ylim(ymin, ymax)
 plt.grid(linestyle='-', linewidth=.2)
 plt.xlabel('Iteration')
 plt.ylabel('Resolution (A)')
-
 plt.show()
 
-# Read the data.star files, iterating through them
-# dataStars = glob.glob('*data.star')
-# it = 1
-# classDict = {}
-# for name in dataStars:
-#     print("Reading " + name)
-#     dataFilename = name
-#     df = parseStar(dataFilename)
-#     classes = []
-#     for i in range(numClasses):
-#         classes.append(0)
-#     for column in df:
-#         if column == "rlnClassNumber":
-#             for i in df[column]:
-#                 classes[i-1] = classes[i-1] + 1
-#     print(classes)
-#     if micrographs == 0:
-#         for i in classes:
-#             micrographs += i
-#     classDict["it_" + str(it)] = classes
-#     it += 1
-# cd = pd.DataFrame.from_dict(classDict, orient='index')
-# cd.plot()
-# plt.show()
-
-
 # TODO:
-# Plot resolution data for each class as well
 # Figure out how to combine it into a PDF
 # Look into getting images of the mrcs, not sure if it's possible.
