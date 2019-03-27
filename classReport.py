@@ -66,9 +66,9 @@ def plotDistribution(cd, legend):
     ymax = maxDist + .06
     ymin = minDist - .005
     if ymax > 1:
-       ymax = 1
+        ymax = 1
     if ymin < 0:
-       ymin = 0
+        ymin = 0
     cd.plot(use_index=True, linewidth=2)
     plt.legend(legend, ncol=2, loc='upper left', title="Classes")
     plt.ylim(ymin, ymax)
@@ -159,19 +159,23 @@ def main():
     rs.columns = headers
     pp = PdfPages(jobName + '.pdf')
 
-    #Plot the distribution and save it to the PDF
+    """
+    Outputting to the PDF
+    """
+    # Plot the distribution and save it to the PDF
     plotDistribution(cd, legend)
     pp.savefig()
     plt.close()
 
-    #Plot the resolution and save it to the PDF
+    # Plot the resolution and save it to the PDF
     plotResolution(rs, legend)
     pp.savefig()
     plt.close
 
-    #Close the PDF
+    # Close the PDF
     pp.close()
 
+    # If the -s flag was input, show the plots in python
     if(args.s):
         plotDistribution(cd, legend)
         plt.show()
@@ -181,29 +185,3 @@ main()
 # TODO:
 # Figure out how to combine it into a PDF
 # Look into getting images of the mrcs, not sure if it's possible.
-
-
-#     #Original ParesStar function taken from PyEM, keep because it wasn't working when
-#     #I was looking up other tables besides data_model_classes
-# def parseStar(starfile, keep_index=False, augment=False):
-#     headers = []
-#     foundheader = False
-#     ln = 0
-#     with open(starfile, "r") as f:
-#         for l in f:
-#             if l.startswith("_"):
-#                 foundheader = True
-#                 lastheader = True
-#                 if keep_index:
-#                     head = l.rstrip()
-#                 else:
-#                     head = l.split('#')[0].rstrip().lstrip('_')
-#                 headers.append(head)
-#             else:
-#                 lastheader = False
-#             if foundheader and not lastheader:
-#                 break
-#             ln += 1
-#     df = pd.read_csv(starfile, skiprows=ln, delimiter='\s+', header=None)
-#     df.columns = headers
-#     return df  #A PANDAS data frame object is returned
