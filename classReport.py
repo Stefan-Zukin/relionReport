@@ -183,5 +183,6 @@ def main():
 
 main()
 # TODO:
-# Figure out how to combine it into a PDF
 # Look into getting images of the mrcs, not sure if it's possible.
+# Do accuracy angles and stuff like that
+# Make it work for other job types (2d class, refine, etc)
