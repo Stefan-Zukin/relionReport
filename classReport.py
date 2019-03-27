@@ -105,6 +105,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'path', nargs=1, help='the path of the directory for the job')
+    parser.add_argument(
+        '-s', dest='s', action='store_true', help='Show the interactive form of the graphs in addition to saving to a PDF.')
     args = parser.parse_args()
     path = args.path[0]
     jobName = path.split("/")
@@ -169,6 +171,10 @@ def main():
 
     #Close the PDF
     pp.close()
+
+    if(args.s):
+        plotDistribution(cd, legend)
+        plt.show()
 
 
 main()
