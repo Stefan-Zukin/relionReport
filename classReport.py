@@ -6,6 +6,7 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import os
 
 # ParseStar function taken from PyEM, slightly modified to work with model.star files containing multiple tables
 
@@ -109,8 +110,18 @@ def main():
         '-s', dest='s', action='store_true', help='Show the interactive form of the graphs in addition to saving to a PDF.')
     args = parser.parse_args()
     path = args.path[0]
-    jobName = path.split("/")
-    jobName = jobName[len(jobName)-2]
+    
+
+    """
+    Doing some tricks to get the path to the directory 
+    that the script is acting on so we can use it to name the .pdf
+    """
+    curr = os.getcwd()
+    os.chdir(path)
+    new = os.getcwd()
+    os.chdir(curr)
+    jobName = new.split("/")
+    jobName = jobName[len(jobName)-1]
     runJob = glob.glob(path + "/run.job")[0]
 
     numClasses = 0
@@ -162,6 +173,7 @@ def main():
     """
     Outputting to the PDF
     """
+    os.chdir(new)
     # Plot the distribution and save it to the PDF
     plotDistribution(cd, legend)
     pp.savefig()
@@ -179,6 +191,8 @@ def main():
     if(args.s):
         plotDistribution(cd, legend)
         plt.show()
+        
+    os.chdir(curr)
 
 
 main()
@@ -186,3 +200,4 @@ main()
 # Look into getting images of the mrcs, not sure if it's possible.
 # Do accuracy angles and stuff like that
 # Make it work for other job types (2d class, refine, etc)
+# Fix the dot issue. Find a better way to get the directory name.
