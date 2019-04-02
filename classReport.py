@@ -120,7 +120,7 @@ def main():
     classDict = {}
     resDict = {}
     rotDict = {}
-    transDict = []
+    transDict = {}
     it = 0
     for name in modelStars:
         filename = name
@@ -134,19 +134,19 @@ def main():
                 classDist = list(df[column])
             if column == "rlnEstimatedResolution":
                 resolution = list(df[column])
-            #if column == "rlnAccuracyRotations":
-            #    accRot = list(df[column])
-           # if column == "rlnAccuracyTranslations":
-             #   accTrans = list(df[column])
+            if column == "rlnAccuracyRotations":
+                accRot = list(df[column])
+            if column == "rlnAccuracyTranslations":
+                accTrans = list(df[column])
         classDict[it] = classDist
         resDict[it] = resolution
-        #rotDict[it] = accRot
-        #transDict[it] = accTrans
+        rotDict[it] = accRot
+        transDict[it] = accTrans
         it += 1
     cd = pd.DataFrame.from_dict(classDict, orient='index')
     rs = pd.DataFrame.from_dict(resDict, orient='index')
-    #ar = pd.DataFrame.from_dict(rotDict, orient='index')
-    #at = pd.DataFrame.from_dict(transDict, orient='index')
+    ar = pd.DataFrame.from_dict(rotDict, orient='index')
+    at = pd.DataFrame.from_dict(transDict, orient='index')
 
     """
     Setting up the tables to be graphed
@@ -174,6 +174,16 @@ def main():
     pp.savefig()
     plt.close()
 
+    #Plot the accuray rotations and save it to the PDF
+    plotDF(ar, legend, "Iteration", "Accuracy", "Accuracy Rotations", None, 0, 1,1)
+    pp.savefig()
+    plt.close()
+
+    #Plot the accuray rotations and save it to the PDF
+    plotDF(at, legend, "Iteration", "Accuracy", "Accuracy Translations", None, 0, 1,1)
+    pp.savefig()
+    plt.close()
+
     # Close the PDF
     pp.close()
 
@@ -181,6 +191,8 @@ def main():
     if(args.i):
         plotDF(cd, legend, "Iteration", "Distribution", "Class Distributions", 1, 0, .05, .02)
         plotDF(rs, legend, "Iteration", "Resolution", "Class Resolution", None, 0, 10, 10)
+        plotDF(ar, legend, "Iteration", "Accuracy", "Accuracy Rotations (Degrees)", None, 0, 1,1)
+        plotDF(at, legend, "Iteration", "Accuracy", "Accuracy Translations (Pixels)", None, 0, 1,1)
         plt.show()
 
     os.chdir(curr)
