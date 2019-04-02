@@ -196,11 +196,10 @@ def main():
         plt.show()
 
     os.chdir(curr)
-    open(jobName + '.pdf')
+    os.system('open ' + jobName + '.pdf')
 
 
 main()
 # TODO:
 # Look into getting images of the mrcs, have to set up chimera command. 
-# Add translational and rotational accuracies (from model.star file)
 # Make it work for other job types (2d class, refine, etc)
