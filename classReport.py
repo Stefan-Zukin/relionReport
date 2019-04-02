@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # coding: utf-8
 
 import glob
@@ -57,46 +57,24 @@ def sortModelStars(model=" "):
         it += 1
     return it
 
-
-def plotDistribution(cd, legend):
-    """
-    Graphing the distribution data
-    """
-    maxDist = cd.max(axis=0).max()
-    minDist = cd.min(axis=0).min()
-    ymax = maxDist + .06
-    ymin = minDist - .005
-    if ymax > 1:
-        ymax = 1
-    if ymin < 0:
-        ymin = 0
-    cd.plot(use_index=True, linewidth=2)
+def plotDF(df, legend, xlabel, ylabel, title, absMax, absMin, yMaxBuffer=0.1, yMinBuffer=0.1):
+    maxDist = df.max(axis=0).max()
+    minDist = df.min(axis=0).min()
+    ymax = maxDist + yMaxBuffer
+    ymin = minDist - yMinBuffer
+    if(absMax != None):
+        if ymax > absMax:
+            ymax = absMax
+    if(absMin != None):
+        if ymin < absMin:
+            ymin = absMin
+    df.plot(use_index=True, linewidth=2)
     plt.legend(legend, ncol=2, loc='upper left', title="Classes")
     plt.ylim(ymin, ymax)
     plt.grid(linestyle='-', linewidth=.2)
-    plt.xlabel('Iteration')
-    plt.ylabel('Distribution')
-    plt.title('Class Distribution')
-
-
-def plotResolution(rs, legend):
-    """
-    Graphing the resolution data
-    """
-    maxRes = rs.max(axis=0).max()
-    minRes = rs.min(axis=0).min()
-    ymax = maxRes + 2
-    ymin = minRes - 1
-    if ymin < 0:
-        ymin = 0
-    rs.plot(use_index=True, linewidth=2)
-    plt.legend(legend, ncol=2, loc='upper left', title="Classes")
-    plt.ylim(ymin, ymax)
-    plt.grid(linestyle='-', linewidth=.2)
-    plt.xlabel('Iteration')
-    plt.ylabel('Resolution (A)')
-    plt.title('Class Resolution')
-
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
 
 # Use the runJob file to determine the number of classes without having to iterate through the whole data.star file
 def main():
@@ -107,7 +85,7 @@ def main():
     parser.add_argument(
         'path', nargs=1, help='the path of the directory for the job')
     parser.add_argument(
-        '-s', dest='s', action='store_true', help='Show the interactive form of the graphs in addition to saving to a PDF.')
+        '-i', dest='i', action='store_true', help='Show the interactive form of the graphs in addition to saving to a PDF.')
     args = parser.parse_args()
     path = args.path[0]
     
@@ -141,22 +119,34 @@ def main():
     modelStars.sort(key=sortModelStars)
     classDict = {}
     resDict = {}
+    rotDict = {}
+    transDict = []
     it = 0
     for name in modelStars:
         filename = name
         df = parseStar(filename, "data_model_classes")
         classDist = []
         resolution = []
+        accRot = []
+        accTrans = []
         for column in df:
             if column == "rlnClassDistribution":
                 classDist = list(df[column])
             if column == "rlnEstimatedResolution":
                 resolution = list(df[column])
+            #if column == "rlnAccuracyRotations":
+            #    accRot = list(df[column])
+           # if column == "rlnAccuracyTranslations":
+             #   accTrans = list(df[column])
         classDict[it] = classDist
         resDict[it] = resolution
+        #rotDict[it] = accRot
+        #transDict[it] = accTrans
         it += 1
     cd = pd.DataFrame.from_dict(classDict, orient='index')
     rs = pd.DataFrame.from_dict(resDict, orient='index')
+    #ar = pd.DataFrame.from_dict(rotDict, orient='index')
+    #at = pd.DataFrame.from_dict(transDict, orient='index')
 
     """
     Setting up the tables to be graphed
@@ -175,29 +165,30 @@ def main():
     """
     os.chdir(new)
     # Plot the distribution and save it to the PDF
-    plotDistribution(cd, legend)
+    plotDF(cd, legend, "Iteration", "Distribution", "Class Distributions", 1, 0, .05, .02)
     pp.savefig()
     plt.close()
 
     # Plot the resolution and save it to the PDF
-    plotResolution(rs, legend)
+    plotDF(rs, legend, "Iteration", "Resolution", "Class Resolution", None, 0, 10, 10)
     pp.savefig()
-    plt.close
+    plt.close()
 
     # Close the PDF
     pp.close()
 
-    # If the -s flag was input, show the plots in python
-    if(args.s):
-        plotDistribution(cd, legend)
+    # If the -i flag was input, show the plots in python
+    if(args.i):
+        plotDF(cd, legend, "Iteration", "Distribution", "Class Distributions", 1, 0, .05, .02)
+        plotDF(rs, legend, "Iteration", "Resolution", "Class Resolution", None, 0, 10, 10)
         plt.show()
-        
+
     os.chdir(curr)
+    open(jobName + '.pdf')
 
 
 main()
 # TODO:
-# Look into getting images of the mrcs, not sure if it's possible.
-# Do accuracy angles and stuff like that
+# Look into getting images of the mrcs, have to set up chimera command. 
+# Add translational and rotational accuracies (from model.star file)
 # Make it work for other job types (2d class, refine, etc)
-# Fix the dot issue. Find a better way to get the directory name.
