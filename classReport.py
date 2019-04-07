@@ -57,6 +57,7 @@ def sortModelStars(model=" "):
         it += 1
     return it
 
+
 def plotDF(df, legend, xlabel, ylabel, title, absMax, absMin, yMaxBuffer=0.1, yMinBuffer=0.1):
     maxDist = df.max(axis=0).max()
     minDist = df.min(axis=0).min()
@@ -77,6 +78,8 @@ def plotDF(df, legend, xlabel, ylabel, title, absMax, absMin, yMaxBuffer=0.1, yM
     plt.title(title)
 
 # Use the runJob file to determine the number of classes without having to iterate through the whole data.star file
+
+
 def main():
     """
     Parsing the path of the job folder
@@ -88,7 +91,6 @@ def main():
         '-i', dest='i', action='store_true', help='Show the interactive form of the graphs in addition to saving to a PDF.')
     args = parser.parse_args()
     path = args.path[0]
-    
 
     """
     Doing some tricks to get the path to the directory 
@@ -100,7 +102,12 @@ def main():
     os.chdir(curr)
     jobName = new.split("/")
     jobName = jobName[len(jobName)-1]
-    runJob = glob.glob(path + "/run.job")[0]
+    print("Parsing run.job file")
+    try:
+        runJob = glob.glob(path + "/run.job")[0]
+    except:
+        print("ERROR: Could not find a run.job file")
+        print()
 
     numClasses = 0
     micrographs = 0
@@ -115,7 +122,12 @@ def main():
     Here we iterate through the model.star files, reading the data we want into PANDAS data frames
     So far I'm taking the class distribution data and the estimated resolution data
     """
-    modelStars = glob.glob(path + '/*model.star')
+    print("Parsing model.star files")
+    try:
+        modelStars = glob.glob(path + '/*model.star')
+    except:
+        print("ERROR: Could not find a model.star file")
+        print()
     modelStars.sort(key=sortModelStars)
     classDict = {}
     resDict = {}
@@ -163,24 +175,29 @@ def main():
     """
     Outputting to the PDF
     """
+    print("Saving graphs to PDF")
     os.chdir(new)
     # Plot the distribution and save it to the PDF
-    plotDF(cd, legend, "Iteration", "Distribution", "Class Distributions", 1, 0, .05, .02)
+    plotDF(cd, legend, "Iteration", "Distribution",
+           "Class Distributions", 1, 0, .05, .02)
     pp.savefig()
     plt.close()
 
     # Plot the resolution and save it to the PDF
-    plotDF(rs, legend, "Iteration", "Resolution", "Class Resolution", None, 0, 10, 10)
+    plotDF(rs, legend, "Iteration", "Resolution",
+           "Class Resolution", None, 0, 10, 10)
     pp.savefig()
     plt.close()
 
-    #Plot the accuray rotations and save it to the PDF
-    plotDF(ar, legend, "Iteration", "Accuracy", "Accuracy Rotations", None, 0, 1,1)
+    # Plot the accuray rotations and save it to the PDF
+    plotDF(ar, legend, "Iteration", "Accuracy",
+           "Accuracy Rotations", None, 0, 1, 1)
     pp.savefig()
     plt.close()
 
-    #Plot the accuray rotations and save it to the PDF
-    plotDF(at, legend, "Iteration", "Accuracy", "Accuracy Translations", None, 0, 1,1)
+    # Plot the accuray rotations and save it to the PDF
+    plotDF(at, legend, "Iteration", "Accuracy",
+           "Accuracy Translations", None, 0, 1, 1)
     pp.savefig()
     plt.close()
 
@@ -189,17 +206,32 @@ def main():
 
     # If the -i flag was input, show the plots in python
     if(args.i):
-        plotDF(cd, legend, "Iteration", "Distribution", "Class Distributions", 1, 0, .05, .02)
-        plotDF(rs, legend, "Iteration", "Resolution", "Class Resolution", None, 0, 10, 10)
-        plotDF(ar, legend, "Iteration", "Accuracy", "Accuracy Rotations (Degrees)", None, 0, 1,1)
-        plotDF(at, legend, "Iteration", "Accuracy", "Accuracy Translations (Pixels)", None, 0, 1,1)
+        plotDF(cd, legend, "Iteration", "Distribution",
+               "Class Distributions", 1, 0, .05, .02)
+        plotDF(rs, legend, "Iteration", "Resolution",
+               "Class Resolution", None, 0, 10, 10)
+        plotDF(ar, legend, "Iteration", "Accuracy",
+               "Accuracy Rotations (Degrees)", None, 0, 1, 1)
+        plotDF(at, legend, "Iteration", "Accuracy",
+               "Accuracy Translations (Pixels)", None, 0, 1, 1)
         plt.show()
+
+    #Chimera stuff
+    chimera = "/Applications/Chimera.app/Contents/MacOS/chimera"
+    #print(curr)
+    print(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + curr +"/" + path + "\"")
+    os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + curr +"/" + path + "\"")
+        #Open a file in chimera runnint my startup script
+        #I think I have to make it use the GUI eventually if I want to save an image
+        #But for now I'll see if it will work without it.
 
     os.chdir(curr)
     os.system('open ' + jobName + '.pdf')
+    print("Finished")
+    
 
 
 main()
 # TODO:
-# Look into getting images of the mrcs, have to set up chimera command. 
+# Look into getting images of the mrcs, have to set up chimera command.
 # Make it work for other job types (2d class, refine, etc)

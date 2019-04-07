@@ -1,0 +1,36 @@
+Running chimera command from terminal without GUI:
+
+http://plato.cgl.ucsf.edu/pipermail/chimera-users/2011-October/006863.html
+
+https://www.cgl.ucsf.edu/chimera/docs/UsersGuide/startup.html
+
+
+Chimera Programmer's Guide:
+
+https://www.cgl.ucsf.edu/chimera/current/docs/ProgrammersGuide/index.html
+
+https://www.cgl.ucsf.edu/chimera/current/docs/ProgrammersGuide/basicPrimer.html
+
+http://www.cgl.ucsf.edu/chimera/docs/ProgrammersGuide/faq.html
+
+
+installing chimera commands to python
+
+http://plato.cgl.ucsf.edu/pipermail/chimera-users/2014-July/010120.html
+
+Chimera command structure:
+
+https://www.cgl.ucsf.edu/chimerax/docs/user/commands/usageconventions.html
+
+Save screen as images using copy command, the save command is only for chimeraX:
+https://www.rbvi.ucsf.edu/chimera/docs/UsersGuide/midas/copy.html
+
+
+
+I don't think I can run chimera console commands from the shell. I can just open chimera and pass it arguments. So I can't do everything I want within python normally using the os library. However, chimera does have some integration so that if I use a library then I can run chimera commands directly from python, but I am not sure how to get it to work, and I think it only works in python 2.7
+	This might have been because my alias of chimera was bad so it wasn't accepting command line arguments. I should try it again. Anyway, I couldn't get the chimera alias to work, because it also needs a python file that is in the same folder. It works if I just use the full chimera path though /Applications/Chimera.app/Contents/MacOS/chimera, so I guess I'll just do that since it shouldn't matter for linux anyway
+
+
+Bugs:
+-Accuracy rotations and translations doesn't work with job 109. Something is wrong.
+	Actually, I might have done this one without searches, not sure. Because in the files the values are all 0.
