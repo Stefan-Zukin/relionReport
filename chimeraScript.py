@@ -2,18 +2,25 @@ from chimera import runCommand as rc
 from chimera import replyobj
 import argparse
 import os
+import sys
 
 """
 Parse the path of the target directory which is given as an argument to the script
 """
-
+raytrace = False
 
 def parsePath():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'path', nargs=1, help='the path of the directory for the job')
+    parser.add_argument(
+        '-r', dest='r', action='store_true', help='Render images using Chimera raytracing')
     args = parser.parse_args()
     path = args.path[0]
+    if(args.r):
+        nonlocal raytrace
+        raytrace = True
+        os.system("echo " + str(raytrace))
     return path
 
 
@@ -59,7 +66,7 @@ def readMRCs(path):
         it = int(s[1][0:3])
         if s[0].startswith("run_ct"):
             it += 1
-        if(iterations.__contains__(it)):
+        if(it in iterations):
             iterations[it] = iterations[it] + [fn]
         else:
             iterations[it] = [fn]
@@ -91,7 +98,13 @@ def chimeraRender(iterations):
         while len(num) < 4:
             num = "0" + num
         png_name = "it" + num + ".png"
-        rc("copy file " + png_name + " supersample 3")
+        os.system("echo " + str(raytrace))
+        if raytrace:
+            os.system("echo hello")
+            rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean")
+        else:
+            os.system("echo hellaint")
+            rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean")
         rc("close all")
     #rc("stop now")
 

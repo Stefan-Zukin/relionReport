@@ -89,6 +89,8 @@ def main():
         'path', nargs=1, help='the path of the directory for the job')
     parser.add_argument(
         '-i', dest='i', action='store_true', help='Show the interactive form of the graphs in addition to saving to a PDF.')
+    parser.add_argument(
+        '-r', dest='r', action='store_true', help='Render images using Chimera raytracing')
     args = parser.parse_args()
     path = args.path[0]
 
@@ -220,8 +222,12 @@ def main():
     Making images in Chimera
     """
     chimera = "/Applications/Chimera.app/Contents/MacOS/chimera"
-    #print(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + curr +"/" + path + "\"")
-    os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + curr +"/" + path + "\"")
+    #This works
+    if(args.r):
+        print("arrr")
+        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + curr +"/" + path + "\"")
+    else:
+        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + curr +"/" + path + "\"")
 
     """
     Returning to starting directory and opening the pdf
