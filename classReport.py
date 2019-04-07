@@ -221,10 +221,6 @@ def main():
     #print(curr)
     print(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + curr +"/" + path + "\"")
     os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + curr +"/" + path + "\"")
-        #Open a file in chimera runnint my startup script
-        #I think I have to make it use the GUI eventually if I want to save an image
-        #But for now I'll see if it will work without it.
-
     os.chdir(curr)
     os.system('open ' + jobName + '.pdf')
     print("Finished")
@@ -233,5 +229,12 @@ def main():
 
 main()
 # TODO:
-# Look into getting images of the mrcs, have to set up chimera command.
+# Chimera stuff:
+#   -Make it output the images to a subdirectory of where we are when we run the script
+#   -Make sure it works on linux with just the chimera command, here I have the path to chimera hard coded
+#       because I'm running it on my mac.
+#   -Tweak the settings of chimera renderer to make it look nice and how I want
+#   -Try to set up the classReport so it doesn't crash if chimera is not installed, but will throw an
+#       informative exception saying chimera needs to be installed for the image part to work.
+#   -See if headless chimera is isntalled, if I can look for it and if it is there use it rather than the gui version.
 # Make it work for other job types (2d class, refine, etc)
