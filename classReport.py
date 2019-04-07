@@ -224,7 +224,6 @@ def main():
     chimera = "/Applications/Chimera.app/Contents/MacOS/chimera"
     #This works
     if(args.r):
-        print("arrr")
         os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + curr +"/" + path + "\"")
     else:
         os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + curr +"/" + path + "\"")

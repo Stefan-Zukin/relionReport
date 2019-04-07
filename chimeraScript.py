@@ -18,9 +18,8 @@ def parsePath():
     args = parser.parse_args()
     path = args.path[0]
     if(args.r):
-        nonlocal raytrace
+        global raytrace
         raytrace = True
-        os.system("echo " + str(raytrace))
     return path
 
 
@@ -100,11 +99,9 @@ def chimeraRender(iterations):
         png_name = "it" + num + ".png"
         os.system("echo " + str(raytrace))
         if raytrace:
-            os.system("echo hello")
             rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean")
         else:
-            os.system("echo hellaint")
-            rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean")
+            rc("copy file " + png_name + " supersample 4")
         rc("close all")
     #rc("stop now")
 
