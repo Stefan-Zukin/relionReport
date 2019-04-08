@@ -110,7 +110,13 @@ def chimeraRender(iterations):
             num = "0" + num
         png_name = "it" + num + ".png"
         os.system("echo Rendering iteration " + str(it))
+        rc("lighting contrast .7")
+        rc("lighting sharpness 100")
+        rc("lighting reflectivity .8")
+        rc("lighting brightness 1.1")
         if raytrace:
+            rc("lighting reflectivity .8")
+            rc("lighting brightness 0.85")
             if(highRes):
                 rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean dpi 128 units inches")
             else:
@@ -122,9 +128,6 @@ def chimeraRender(iterations):
             else:
                 rc("lighting mode two-point")
                 rc("set silhouetteWidth 4")
-            rc("lighting contrast .7")
-            rc("lighting sharpness 100")
-            rc("lighting reflectivity .8")
             if(highRes):
                 rc("copy file " + png_name + " supersample 4 dpi 128 units inches")
             else:
