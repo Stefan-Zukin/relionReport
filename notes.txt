@@ -36,6 +36,10 @@ Bugs:
 	Actually, I might have done this one without searches, not sure. Because in the files the values are all 0.
 
 
+FFMPEG:
+ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p test.mp4
+
+
 
 
 Example script:

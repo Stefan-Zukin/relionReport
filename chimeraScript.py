@@ -8,6 +8,8 @@ import sys
 Parse the path of the target directory which is given as an argument to the script
 """
 raytrace = False
+flat = False
+highRes = False
 
 def parsePath():
     parser = argparse.ArgumentParser()
@@ -15,11 +17,21 @@ def parsePath():
         'path', nargs=1, help='the path of the directory for the job')
     parser.add_argument(
         '-r', dest='r', action='store_true', help='Render images using Chimera raytracing')
+    parser.add_argument(
+        '-f', dest='f', action='store_true', help='Render the images as flat, without shadows or highlights')
+    parser.add_argument(
+        '-hr', dest='hr', action='store_true', help='Render higher resolution images. Will make the process slower.')
     args = parser.parse_args()
     path = args.path[0]
     if(args.r):
         global raytrace
         raytrace = True
+    if(args.f):
+        global flat
+        flat = True
+    if(args.hr):
+        global highRes
+        highRes = True
     return path
 
 
@@ -97,13 +109,28 @@ def chimeraRender(iterations):
         while len(num) < 4:
             num = "0" + num
         png_name = "it" + num + ".png"
-        os.system("echo " + str(raytrace))
+        os.system("echo Rendering iteration " + str(it))
         if raytrace:
-            rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean")
+            if(highRes):
+                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean dpi 128 units inches")
+            else:
+                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean")
         else:
-            rc("copy file " + png_name + " supersample 4")
+            if(flat):
+                rc("lighting mode ambient")
+                rc("set silhouetteWidth 8")
+            else:
+                rc("lighting mode two-point")
+                rc("set silhouetteWidth 4")
+            rc("lighting contrast .7")
+            rc("lighting sharpness 100")
+            rc("lighting reflectivity .8")
+            if(highRes):
+                rc("copy file " + png_name + " supersample 4 dpi 128 units inches")
+            else:
+                rc("copy file " + png_name + " supersample 4")
         rc("close all")
-    #rc("stop now")
+    rc("stop now")
 
 
 def main():

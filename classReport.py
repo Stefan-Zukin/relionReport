@@ -91,6 +91,10 @@ def main():
         '-i', dest='i', action='store_true', help='Show the interactive form of the graphs in addition to saving to a PDF.')
     parser.add_argument(
         '-r', dest='r', action='store_true', help='Render images using Chimera raytracing')
+    parser.add_argument(
+        '-f', dest='f', action='store_true', help='Render images as flat, without shadows or highlights')
+    parser.add_argument(
+        '-hr', dest='hr', action='store_true', help='Render higher resolution images. Will make the process slower.')
     args = parser.parse_args()
     path = args.path[0]
 
@@ -221,12 +225,19 @@ def main():
     """
     Making images in Chimera
     """
+    print("Rendering images in Chimera")
     chimera = "/Applications/Chimera.app/Contents/MacOS/chimera"
     #This works
-    if(args.r):
-        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + curr +"/" + path + "\"")
+    if(args.hr):
+        h = "-hr "
     else:
-        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + curr +"/" + path + "\"")
+        h = ''
+    if args.r:
+        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + h + curr +"/" + path + "\"")
+    elif args.f:
+        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -f " + h  + curr +"/" + path + "\"")
+    else:
+        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + h  + curr +"/" + path + "\"")
 
     """
     Returning to starting directory and opening the pdf
