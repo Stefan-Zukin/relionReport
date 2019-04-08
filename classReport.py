@@ -259,5 +259,6 @@ main()
 #       informative exception saying chimera needs to be installed for the image part to work.
 #   -See if headless chimera is isntalled, if I can look for it and if it is there use it rather than the gui version.
 #   -See if I can integrate the chimeraScript.py into this file, and only execute it if there is a flag which I will call from the main method.
+#   -ENsure high resolution mode always outputs a multiple of 2
 # Make it work for other job types (2d class, refine, etc)
 #Maybe make an auto ffmpeg command, at least do a try, except

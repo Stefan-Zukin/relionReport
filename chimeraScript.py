@@ -114,13 +114,14 @@ def chimeraRender(iterations):
         rc("lighting sharpness 100")
         rc("lighting reflectivity .8")
         rc("lighting brightness 1.1")
+        rc("window")
         if raytrace:
             rc("lighting reflectivity .8")
             rc("lighting brightness 0.85")
             if(highRes):
-                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean dpi 128 units inches")
+                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 16  height 16 dpi 128 units inches")
             else:
-                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean")
+                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 8 height 8 dpi 128 units inches")
         else:
             if(flat):
                 rc("lighting mode ambient")
@@ -129,9 +130,9 @@ def chimeraRender(iterations):
                 rc("lighting mode two-point")
                 rc("set silhouetteWidth 4")
             if(highRes):
-                rc("copy file " + png_name + " supersample 4 dpi 128 units inches")
+                rc("copy file " + png_name + " supersample 4 width 16 height 16 dpi 128 units inches")
             else:
-                rc("copy file " + png_name + " supersample 4")
+                rc("copy file " + png_name + " supersample 4 width 8 height 8 dpi 128 units inches")
         rc("close all")
     rc("stop now")
 
