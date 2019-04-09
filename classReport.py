@@ -255,7 +255,7 @@ def main():
     """    
     os.chdir(curr + "/chimeraImages")
     try:
-        subprocess.call("ffmpeg -r 10 -f image2 -s 1920x1080 -i -it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4")
+        subprocess.call("ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4")
     except:
         print("Rendering frames into movie failed. Check that you have ffmpeg installed")
         print("Try manually running the command from the chimeraImages folder: ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4")
