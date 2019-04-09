@@ -96,7 +96,7 @@ def main():
     parser.add_argument(
         '-hr', dest='hr', action='store_true', help='Render higher resolution images. Will make the process slower.')
     args = parser.parse_args()
-    path = args.path[0]
+    path = args.path[0][1:]
 
     """
     Doing some tricks to get the path to the directory 
@@ -224,14 +224,17 @@ def main():
 
     """
     Making images in Chimera
+    If part of this doesn't work, make sure you've replaced the string for Chimera with 
+    whatever you can type into terminal to start chimera. For mac it is /Applications/Chimera.app/Contents/MacOS/chimera
     """
+    
     print("Rendering images in Chimera")
-    chimera = "/Applications/Chimera.app/Contents/MacOS/chimera"
-    #This works
+    chimera = "chimera"
     if(args.hr):
         h = "-hr "
     else:
         h = ''
+    print(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + h + curr +"/" + path + "\"")
     if args.r:
         os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + h + curr +"/" + path + "\"")
     elif args.f:
