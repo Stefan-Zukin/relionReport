@@ -3,6 +3,8 @@ from chimera import replyobj
 import argparse
 import os
 import sys
+import subprocess
+from datetime import datetime
 
 """
 Parse the path of the target directory which is given as an argument to the script
@@ -109,7 +111,7 @@ def chimeraRender(iterations):
         while len(num) < 4:
             num = "0" + num
         png_name = "it" + num + ".png"
-        os.system("echo Rendering iteration " + str(it))
+        subprocess.call("echo \"Rendering iteration " + str(it) + " at " + datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
         rc("lighting contrast .7")
         rc("lighting sharpness 100")
         rc("lighting reflectivity .8")

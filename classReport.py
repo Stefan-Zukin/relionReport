@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import os
+import subprocess
 
 # ParseStar function taken from PyEM, slightly modified to work with model.star files containing multiple tables
 
@@ -96,7 +97,7 @@ def main():
     parser.add_argument(
         '-hr', dest='hr', action='store_true', help='Render higher resolution images. Will make the process slower.')
     args = parser.parse_args()
-    path = args.path[0][1:]
+    path = args.path[0]
 
     """
     Doing some tricks to get the path to the directory 
@@ -224,29 +225,29 @@ def main():
 
     """
     Making images in Chimera
-    If part of this doesn't work, make sure you've replaced the string for Chimera with 
-    whatever you can type into terminal to start chimera. For mac it is /Applications/Chimera.app/Contents/MacOS/chimera
     """
     
     print("Rendering images in Chimera")
-    chimera = "chimera"
+    #Make this variable equal to the full path to your chimera executable. The default I have is chimera 1.13.1 in SBGrid
+    #On my mac it was /Applications/Chimera.app/Contents/MacOS/chimera
+    chimera = "/programs/x86_64-linux/chimera/1.13.1/bin/chimera"
     if(args.hr):
         h = "-hr "
     else:
         h = ''
-    print(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + h + curr +"/" + path + "\"")
     if args.r:
-        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + h + curr +"/" + path + "\"")
+        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + h + curr +"/" + path + "\"", shell=True)
     elif args.f:
-        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -f " + h  + curr +"/" + path + "\"")
+        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -f " + h  + curr +"/" + path + "\"", shell=True)
     else:
-        os.system(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + h  + curr +"/" + path + "\"")
-
+        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + h  + curr +"/" + path + "\"", shell=True)
+        
     """
     Returning to starting directory and opening the pdf
     """    
     os.chdir(curr)
-    os.system('open ' + jobName + '.pdf')
+    #Uncomment the line below to automatically open the PDF:
+    #subprocess.call('xdg-open ' + jobName + '.pdf', shell=True)
     print("Finished")
     
 
@@ -257,6 +258,8 @@ main()
 #   -Make it output the images to a subdirectory of where we are when we run the script
 #   -Make sure it works on linux with just the chimera command, here I have the path to chimera hard coded
 #       because I'm running it on my mac.
+#	-Also, I think the file input for Chimera only works if it's a subdirectory of where we are. I'll have to work on that.
+#		-Should be easy to fix since I already have that working for the main program
 #   -Tweak the settings of chimera renderer to make it look nice and how I want
 #   -Try to set up the classReport so it doesn't crash if chimera is not installed, but will throw an
 #       informative exception saying chimera needs to be installed for the image part to work.
