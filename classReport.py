@@ -10,10 +10,11 @@ import os
 import subprocess
 import sys
 
-# ParseStar function taken from PyEM, slightly modified to work with model.star files containing multiple tables
-
 
 def parseStar(starFile, tableName, keep_index=False, augment=False):
+    """ParseStar function taken from PyEM, slightly modified to work with model.star files containing multiple tables
+    Returns a Pandas dataframe with the data from the .star file
+    """
     headers = []
     foundTable = False
     foundheader = False
@@ -53,6 +54,7 @@ def parseStar(starFile, tableName, keep_index=False, augment=False):
 
 
 def sortModelStars(model=" "):
+    """Sorting method which sorts model.star files by iteration number"""
     s = model.split("it")
     it = int(s[1][0:3])
     if s[0].startswith("run_ct"):
@@ -61,6 +63,7 @@ def sortModelStars(model=" "):
 
 
 def plotDF(df, legend, xlabel, ylabel, title, absMax, absMin, yMaxBuffer=0.1, yMinBuffer=0.1):
+    """Generalized function for plotting a PANDAS dataframe"""
     maxDist = df.max(axis=0).max()
     minDist = df.min(axis=0).min()
     ymax = maxDist + yMaxBuffer
@@ -79,13 +82,9 @@ def plotDF(df, legend, xlabel, ylabel, title, absMax, absMin, yMaxBuffer=0.1, yM
     plt.ylabel(ylabel)
     plt.title(title)
 
-# Use the runJob file to determine the number of classes without having to iterate through the whole data.star file
 
-
-def main():
-    """
-    Parsing the path of the job folder
-    """
+def parseArgs():
+    """Parses arguments and returns them as an args object"""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'path', nargs=1, help='the path of the directory for the job')
@@ -98,18 +97,11 @@ def main():
     parser.add_argument(
         '-hr', dest='hr', action='store_true', help='Render higher resolution images. Will make the process slower.')
     args = parser.parse_args()
-    path = args.path[0]
+    return args
 
-    """
-    Doing some tricks to get the path to the directory 
-    that the script is acting on so we can use it to name the .pdf
-    """
-    curr = os.getcwd()
-    os.chdir(path)
-    new = os.getcwd()
-    os.chdir(curr)
-    jobName = new.split("/")
-    jobName = jobName[len(jobName)-1]
+
+def parseNumClasses(path):
+    """Parse the run.job file. Returns the number of classes"""
     print("Parsing run.job file")
     try:
         runJob = glob.glob(path + "/run.job")[0]
@@ -118,17 +110,17 @@ def main():
         print()
 
     numClasses = 0
-    micrographs = 0
-    min = 1
-    max = 0
     with open(runJob, "r") as f:
         for l in f:
             if l.startswith("Number of classes"):
                 numClasses = (int)(l.split("== ")[1])
+    return numClasses
 
-    """
-    Here we iterate through the model.star files, reading the data we want into PANDAS data frames
-    So far I'm taking the class distribution data and the estimated resolution data
+
+def readModelStars(path):
+    """Read the data we want from the dataframe.
+    Returns four dictionaries for class distribution, resolution, accuracy rotations and accuracy translations
+    The dictionaries map iteration number to a list which contains the values for all of the classes in order.
     """
     print("Parsing model.star files")
     try:
@@ -168,23 +160,15 @@ def main():
     ar = pd.DataFrame.from_dict(rotDict, orient='index')
     at = pd.DataFrame.from_dict(transDict, orient='index')
 
-    """
-    Setting up the tables to be graphed
-    """
-    headers = []
-    legend = ''
-    for i in range(numClasses):
-        headers.append("class" + str(i))
-        legend += str(i+1)
-    cd.columns = headers
-    rs.columns = headers
-    pp = PdfPages(jobName + '.pdf')
+    return cd, rs, ar, at
 
-    """
-    Outputting to the PDF
-    """
+
+def graphToPDF(cd, rs, ar, at, legend, jobName):
+    """Graph the dataframes and save to pdf"""
+
+    pp = PdfPages(jobName + '.pdf')
     print("Saving graphs to PDF")
-    os.chdir(new)
+
     # Plot the distribution and save it to the PDF
     plotDF(cd, legend, "Iteration", "Distribution",
            "Class Distributions", 1, 0, .05, .02)
@@ -212,25 +196,26 @@ def main():
     # Close the PDF
     pp.close()
 
-    # If the -i flag was input, show the plots in python
-    if(args.i):
-        plotDF(cd, legend, "Iteration", "Distribution",
-               "Class Distributions", 1, 0, .05, .02)
-        plotDF(rs, legend, "Iteration", "Resolution",
-               "Class Resolution", None, 0, 10, 10)
-        plotDF(ar, legend, "Iteration", "Accuracy",
-               "Accuracy Rotations (Degrees)", None, 0, 1, 1)
-        plotDF(at, legend, "Iteration", "Accuracy",
-               "Accuracy Translations (Pixels)", None, 0, 1, 1)
-        plt.show()
 
-    """
-    Making images in Chimera
-    """
-    
+def graphInteractive(cd, rs, ar, at, legend):
+    """Show othe interactive plots of the data"""
+
+    plotDF(cd, legend, "Iteration", "Distribution",
+           "Class Distributions", 1, 0, .05, .02)
+    plotDF(rs, legend, "Iteration", "Resolution",
+           "Class Resolution", None, 0, 10, 10)
+    plotDF(ar, legend, "Iteration", "Accuracy",
+           "Accuracy Rotations (Degrees)", None, 0, 1, 1)
+    plotDF(at, legend, "Iteration", "Accuracy",
+           "Accuracy Translations (Pixels)", None, 0, 1, 1)
+    plt.show()
+
+
+def chimera(path, curr, args):
+    """This function does all the work to render images in chimera using chimeraScript.py"""
+
     print("Rendering images in Chimera")
-    #Make this variable equal to the full path to your chimera executable. The default I have is chimera 1.13.1 in SBGrid
-    #On my mac it was /Applications/Chimera.app/Contents/MacOS/chimera
+    # Make sure this variable equal to the full path to your chimera executable.
     chimera = ""
     if sys.platform == "linux" or sys.platform == "linux2":
         # linux
@@ -242,34 +227,81 @@ def main():
         h = "-hr "
     else:
         h = ''
-    #print(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + h  + curr +"/" + path + " " + curr + "\"")
     if args.r:
-        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + h + curr +"/" + path + " " + curr + "\"", shell=True)
+        subprocess.call(chimera + " --script " + "\"" + curr + "/chimeraScript.py -r " +
+                        h + curr + "/" + path + " " + curr + "\"", shell=True)
     elif args.f:
-        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -f " + h  + curr +"/" + path + " " + curr + "\"", shell=True)
+        subprocess.call(chimera + " --script " + "\"" + curr + "/chimeraScript.py -f " +
+                        h + curr + "/" + path + " " + curr + "\"", shell=True)
     else:
-        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + h  + curr +"/" + path + " " + curr + "\"", shell=True)
-        
+        subprocess.call(chimera + " --script " + "\"" + curr + "/chimeraScript.py " +
+                        h + curr + "/" + path + " " + curr + "\"", shell=True)
+
     """
-    Returning to starting directory and opening the pdf
-    """    
+    Attempting to render a movie using ffmpeg
+    """
     os.chdir(curr + "/chimeraImages")
     try:
-        subprocess.call("ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4", shell=True)
+        subprocess.call(
+            "ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4", shell=True)
     except:
         print("Rendering frames into movie failed. Check that you have ffmpeg installed")
         print("Try manually running the command from the chimeraImages folder: ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4")
-    #Uncomment the line below to automatically open the PDF:
+
+
+def main():
+    """
+    Parsing the path of the job folder
+    """
+    args = parseArgs()
+    path = args.path[0]
+
+    """
+    Doing some tricks to get the path to the directory 
+    that the script is acting on so we can use it to name the .pdf
+    """
+    curr = os.getcwd()
+    os.chdir(path)
+    new = os.getcwd()
+    os.chdir(curr)
+    jobName = new.split("/")
+    jobName = jobName[len(jobName)-1]
+    numClasses = parseNumClasses(path)
+
+    """
+    Read data from model.star dataframes
+    """
+    cd, rs, ar, at = readModelStars(path)
+
+    """
+    Saving graphs to PDF
+    """
+    legend = ''
+    for i in range(numClasses):
+        legend += str(i+1)
+    os.chdir(curr)
+    graphToPDF(cd, rs, ar, at, legend, jobName)
+
+    """
+    Making images in Chimera
+    """
+    chimera(path, curr, args)
+
+    # Uncomment the line below to automatically open the PDF:
     #subprocess.call('xdg-open ' + jobName + '.pdf', shell=True)
+
+    """
+    If the -i flag was input, show the plots in python
+    """
+    if(args.i):
+        graphInteractive(cd, rs, ar, at, legend)
+
     print("Finished")
-    
 
 
 main()
 # TODO:
 # Chimera stuff:
-#   -Make sure it works on linux with just the chimera command, here I have the path to chimera hard coded
-#       because I'm running it on my mac.
 #	-Also, I think the file input for Chimera only works if it's a subdirectory of where we are. I'll have to work on that.
 #		-Should be easy to fix since I already have that working for the main program
 #   -Try to set up the classReport so it doesn't crash if chimera is not installed, but will throw an
@@ -278,4 +310,4 @@ main()
 #	-Currently need to execute the script from the folder it's in or else the chimera script doesn't have the right path
 #   -ENsure high resolution mode always outputs a multiple of 2
 # Make it work for other job types (2d class, refine, etc)
-#Put some more things into functions. It will make the code nicer.
+# Put some more things into functions. It will make the code nicer.
