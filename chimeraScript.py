@@ -12,11 +12,15 @@ Parse the path of the target directory which is given as an argument to the scri
 raytrace = False
 flat = False
 highRes = False
+path = ""
+output = ""
 
 def parsePath():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        'path', nargs=1, help='the path of the directory for the job')
+        'path', nargs=1, help='the path of the directory containing the micrographs')
+    parser.add_argument(
+        'output', nargs=1, help='the path of the directory for the output')
     parser.add_argument(
         '-r', dest='r', action='store_true', help='Render images using Chimera raytracing')
     parser.add_argument(
@@ -24,9 +28,15 @@ def parsePath():
     parser.add_argument(
         '-hr', dest='hr', action='store_true', help='Render higher resolution images. Will make the process slower.')
     args = parser.parse_args()
+    global output
     path = args.path[0]
+    output = args.output[0] + "/chimeraImages"
+    try:
+        os.mkdir(output)
+    except:
+        print('')
     if(args.r):
-        global raytrace
+        global raytracechime
         raytrace = True
     if(args.f):
         global flat
@@ -97,8 +107,10 @@ Loads the mrcs and prints out the image files
 
 
 def chimeraRender(iterations):
+    global path
     for it in iterations.keys():
         modelNum = 0
+        rc("cd " + path)
         for c in iterations[it]:
             replyobj.status("Processing " + c)
             rc("open " + c)
@@ -112,6 +124,7 @@ def chimeraRender(iterations):
             num = "0" + num
         png_name = "it" + num + ".png"
         subprocess.call("echo \"Rendering iteration " + str(it) + " at " + datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
+        rc("cd " + output)
         rc("lighting contrast .7")
         rc("lighting sharpness 100")
         rc("lighting reflectivity .8")
@@ -140,6 +153,7 @@ def chimeraRender(iterations):
 
 
 def main():
+    global path
     path = parsePath()
     iterations = readMRCs(path)
     chimeraRender(iterations)

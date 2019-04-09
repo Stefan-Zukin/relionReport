@@ -235,12 +235,13 @@ def main():
         h = "-hr "
     else:
         h = ''
+    #print(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + h  + curr +"/" + path + " " + curr + "\"")
     if args.r:
-        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + h + curr +"/" + path + "\"", shell=True)
+        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -r " + h + curr +"/" + path + " " + curr + "\"", shell=True)
     elif args.f:
-        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -f " + h  + curr +"/" + path + "\"", shell=True)
+        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py -f " + h  + curr +"/" + path + " " + curr + "\"", shell=True)
     else:
-        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + h  + curr +"/" + path + "\"", shell=True)
+        subprocess.call(chimera + " --script " +"\"" +  curr + "/chimeraScript.py " + h  + curr +"/" + path + " " + curr + "\"", shell=True)
         
     """
     Returning to starting directory and opening the pdf
@@ -265,6 +266,7 @@ main()
 #       informative exception saying chimera needs to be installed for the image part to work.
 #   -See if headless chimera is isntalled, if I can look for it and if it is there use it rather than the gui version.
 #   -See if I can integrate the chimeraScript.py into this file, and only execute it if there is a flag which I will call from the main method.
+#	-Currently need to execute the script from the folder it's in or else the chimera script doesn't have the right path
 #   -ENsure high resolution mode always outputs a multiple of 2
 # Make it work for other job types (2d class, refine, etc)
 #Maybe make an auto ffmpeg command, at least do a try, except
