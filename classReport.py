@@ -258,7 +258,7 @@ def main():
         subprocess.call("ffmpeg -r 10 -f image2 -s 1920x1080 -i -it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4")
     except:
         print("Rendering frames into movie failed. Check that you have ffmpeg installed")
-        print("Try manually running the command from the chimeraImages folder: ffmpeg -r 10 -f image2 -s 1920x1080 -i -it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4")
+        print("Try manually running the command from the chimeraImages folder: ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4")
     #Uncomment the line below to automatically open the PDF:
     #subprocess.call('xdg-open ' + jobName + '.pdf', shell=True)
     print("Finished")
@@ -278,5 +278,4 @@ main()
 #	-Currently need to execute the script from the folder it's in or else the chimera script doesn't have the right path
 #   -ENsure high resolution mode always outputs a multiple of 2
 # Make it work for other job types (2d class, refine, etc)
-#Maybe make an auto ffmpeg command, at least do a try, except
 #Put some more things into functions. It will make the code nicer.
