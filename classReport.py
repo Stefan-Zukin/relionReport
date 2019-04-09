@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import os
 import subprocess
+import sys
 
 # ParseStar function taken from PyEM, slightly modified to work with model.star files containing multiple tables
 
@@ -230,8 +231,13 @@ def main():
     print("Rendering images in Chimera")
     #Make this variable equal to the full path to your chimera executable. The default I have is chimera 1.13.1 in SBGrid
     #On my mac it was /Applications/Chimera.app/Contents/MacOS/chimera
-    chimera = "/programs/x86_64-linux/chimera/1.13.1/bin/chimera"
-   
+    chimera = ""
+    if sys.platform == "linux" or sys.platform == "linux2":
+        # linux
+        chimera = "/programs/x86_64-linux/chimera/1.13.1/bin/chimera"
+    elif sys.platform == "darwin":
+        # OS X
+        chimera = "/Applications/Chimera.app/Contents/MacOS/chimera"
     if(args.hr):
         h = "-hr "
     else:
