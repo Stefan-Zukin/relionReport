@@ -108,11 +108,11 @@ Loads the mrcs and prints out the image files
 
 def chimeraRender(iterations):
     global path
+    finalIt = 0
     for it in iterations.keys():
         modelNum = 0
         rc("cd " + path)
         for c in iterations[it]:
-            replyobj.status("Processing " + c)
             rc("open " + c)
             rc("volume #" + str(modelNum) + " sdlevel 7")
             rc("volume #" + str(modelNum) + " step 1")
@@ -122,34 +122,59 @@ def chimeraRender(iterations):
         num = str(it)
         while len(num) < 4:
             num = "0" + num
-        png_name = "it" + num + ".png"
+        png_name = "frame" + num + ".png"
         subprocess.call("echo \"Rendering iteration " + str(it) + " at " + datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
         rc("cd " + output)
-        rc("lighting contrast .7")
-        rc("lighting sharpness 100")
-        rc("lighting reflectivity .8")
-        rc("lighting brightness 1.1")
-        rc("window")
-        if raytrace:
-            rc("lighting reflectivity .8")
-            rc("lighting brightness 0.85")
-            if(highRes):
-                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 16  height 16 dpi 128 units inches")
-            else:
-                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 8 height 8 dpi 128 units inches")
-        else:
-            if(flat):
-                rc("lighting mode ambient")
-                rc("set silhouetteWidth 8")
-            else:
-                rc("lighting mode two-point")
-                rc("set silhouetteWidth 4")
-            if(highRes):
-                rc("copy file " + png_name + " supersample 4 width 16 height 16 dpi 128 units inches")
-            else:
-                rc("copy file " + png_name + " supersample 4 width 8 height 8 dpi 128 units inches")
-        rc("close all")
+        saveImage(png_name, raytrace, flat, highRes)
+        finalIt = it
+
+    #Spin with the final iteration
+    modelNum = 0
+    subprocess.call("echo \"Rendering final spin at " + datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
+    rc("cd " + path)
+    for c in iterations[finalIt]:
+            rc("open " + c)
+            rc("volume #" + str(modelNum) + " sdlevel 7")
+            rc("volume #" + str(modelNum) + " step 1")
+            modelNum += 1
+    rc("tile")
+    rc("preset apply publication 1")
+    for x in range(36):
+        #rc("turn y 10 model #0-" + str(modelNum))
+        num = str(finalIt + 1 + x) 
+        while len(num) < 4:
+                num = "0" + num
+        png_name = "frame" + num + ".png"
+        rc("cd " + output)
+        saveImage(png_name, raytrace, flat, highRes, False)
     rc("stop now")
+
+def saveImage(png_name, raytrace, flat, highRes, closeModelsAfterSaving=True):
+    rc("lighting contrast .7")
+    rc("lighting sharpness 100")
+    rc("lighting reflectivity .8")
+    rc("lighting brightness 1.1")
+    rc("window")
+    if raytrace:
+        rc("lighting reflectivity .8")
+        rc("lighting brightness 0.85")
+        if(highRes):
+            rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 16  height 16 dpi 128 units inches")
+        else:
+            rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 8 height 8 dpi 128 units inches")
+    else:
+        if(flat):
+            rc("lighting mode ambient")
+            rc("set silhouetteWidth 8")
+        else:
+            rc("lighting mode two-point")
+            rc("set silhouetteWidth 4")
+        if(highRes):
+            rc("copy file " + png_name + " supersample 4 width 16 height 16 dpi 128 units inches")
+        else:
+            rc("copy file " + png_name + " supersample 4 width 8 height 8 dpi 128 units inches")
+    if closeModelsAfterSaving:
+        rc("close all")
 
 
 def main():

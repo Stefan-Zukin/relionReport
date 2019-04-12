@@ -254,7 +254,7 @@ def chimera(path, curr, args):
     os.chdir(curr + "/chimeraImages")
     try:
         subprocess.call(
-            "ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4", shell=True)
+            "ffmpeg -r 10 -f image2 -s 1920x1080 -i frame%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4", shell=True)
     except:
         print("Rendering frames into movie failed. Check that you have ffmpeg installed")
         print("Try manually running the command from the chimeraImages folder: ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4")
@@ -313,13 +313,9 @@ def main():
 main()
 # TODO:
 # Chimera stuff:
-#	-Also, I think the file input for Chimera only works if it's a subdirectory of where we are. I'll have to work on that.
-#		-Should be easy to fix since I already have that working for the main program
-#		-Error traceback is line 83 in chimerascript.py
 #   -Try to set up the classReport so it doesn't crash if chimera is not installed, but will throw an
 #       informative exception saying chimera needs to be installed for the image part to work.
 #   -See if I can integrate the chimeraScript.py into this file, and only execute it if there is a flag which I will call from the main method.
 #	-Currently need to execute the script from the folder it's in or else the chimera script doesn't have the right path
-#   -ENsure high resolution mode always outputs a multiple of 2
 # Make it work for other job types (2d class, refine, etc)
 # Put some more things into functions. It will make the code nicer.
