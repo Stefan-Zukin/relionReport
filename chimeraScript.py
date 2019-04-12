@@ -36,7 +36,7 @@ def parsePath():
     except:
         print('')
     if(args.r):
-        global raytracechime
+        global raytrace
         raytrace = True
     if(args.f):
         global flat
@@ -139,22 +139,24 @@ def chimeraRender(iterations):
             modelNum += 1
     rc("tile")
     rc("preset apply publication 1")
-    for x in range(36):
-        #rc("turn y 10 model #0-" + str(modelNum))
+    rc("window")
+    for x in range(90):
+        rc("turn y 4 model #0-" + str(modelNum))
         num = str(finalIt + 1 + x) 
         while len(num) < 4:
                 num = "0" + num
         png_name = "frame" + num + ".png"
         rc("cd " + output)
-        saveImage(png_name, raytrace, flat, highRes, False)
+        saveImage(png_name, raytrace, flat, highRes, False, False)
     rc("stop now")
 
-def saveImage(png_name, raytrace, flat, highRes, closeModelsAfterSaving=True):
+def saveImage(png_name, raytrace, flat, highRes, closeModelsAfterSaving=True, autoFitWindow=True):
     rc("lighting contrast .7")
     rc("lighting sharpness 100")
     rc("lighting reflectivity .8")
     rc("lighting brightness 1.1")
-    rc("window")
+    if autoFitWindow:
+        rc("window")
     if raytrace:
         rc("lighting reflectivity .8")
         rc("lighting brightness 0.85")
