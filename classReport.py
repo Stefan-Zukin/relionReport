@@ -11,6 +11,14 @@ import subprocess
 import sys
 
 
+"""
+Invariants:
+    -The path variable should always hold the absolute path to the target directory.
+    -The curr variable should always hold the absolute path to the directory from which the script was run.
+
+
+"""
+
 def parseStar(starFile, tableName, keep_index=False, augment=False):
     """ParseStar function taken from PyEM, slightly modified to work with model.star files containing multiple tables
     Returns a Pandas dataframe with the data from the .star file
@@ -232,13 +240,13 @@ def chimera(path, curr, args):
         h = ''
     if args.r:
         subprocess.call(chimera + " --script " + "\"" + curr + "/chimeraScript.py -r " +
-                        h + curr + "/" + path + " " + curr + "\"", shell=True)
+                        h + path + " " + curr + "\"", shell=True)
     elif args.f:
         subprocess.call(chimera + " --script " + "\"" + curr + "/chimeraScript.py -f " +
-                        h + curr + "/" + path + " " + curr + "\"", shell=True)
+                        h + path + " " + curr + "\"", shell=True)
     else:
         subprocess.call(chimera + " --script " + "\"" + curr + "/chimeraScript.py " +
-                        h + curr + "/" + path + " " + curr + "\"", shell=True)
+                        h + path + " " + curr + "\"", shell=True)
 
     """
     Attempting to render a movie using ffmpeg
@@ -265,9 +273,9 @@ def main():
     """
     curr = os.getcwd()
     os.chdir(path)
-    new = os.getcwd()
+    path = os.getcwd()
     os.chdir(curr)
-    jobName = new.split("/")
+    jobName = path.split("/")
     jobName = jobName[len(jobName)-1]
     numClasses = parseNumClasses(path)
 
