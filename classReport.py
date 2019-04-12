@@ -54,8 +54,11 @@ def parseStar(starFile, tableName, keep_index=False, augment=False):
 
 
 def sortModelStars(model=" "):
-    """Sorting method which sorts model.star files by iteration number"""
-    s = model.split("it")
+    """Sorting method which sorts model.star files by iteration number
+    Important to do this double split, to get only the filename of the .star
+    Otherwise had a bug if enclosing folders had 'it" in the name, like /titan/"""
+    s = model.split("run_")[1]
+    s = s.split("it")
     it = int(s[1][0:3])
     if s[0].startswith("run_ct"):
         it += 1
@@ -304,6 +307,7 @@ main()
 # Chimera stuff:
 #	-Also, I think the file input for Chimera only works if it's a subdirectory of where we are. I'll have to work on that.
 #		-Should be easy to fix since I already have that working for the main program
+#		-Error traceback is line 83 in chimerascript.py
 #   -Try to set up the classReport so it doesn't crash if chimera is not installed, but will throw an
 #       informative exception saying chimera needs to be installed for the image part to work.
 #   -See if I can integrate the chimeraScript.py into this file, and only execute it if there is a flag which I will call from the main method.
