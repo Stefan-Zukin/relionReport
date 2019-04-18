@@ -19,14 +19,44 @@ Invariants:
 
 """
 
+
 class starTable():
 
-    def __init__(self, starFile, tableName):
-        self.starFile = starFile
-        self.tableName = tableName
-        print(starFile, tableName)
+    def __readModelGeneral(self):
+        """
+        This function is a special case to read the ModelGeneral table
+        This is necessary because ModelGeneral has different formatting than all the other tables
+        in the model.star file
+        Returns a PANDAS dataframe
+        """
+        dictionary = {}
+        foundTable = False
+        reading = False
+        with open(self.starFile, "r") as star:
+            for line in star:
+                if line.startswith(self.tableName):
+                    foundTable = True
+                if foundTable:
+                    if line.startswith("_"):
+                        reading = True
+                        head = line.split(' ')
+                        value = float(head[len(head)-1])
+                        head = head[0][1:]
+                        dictionary[head] = [value]
+                    if reading and line.startswith("\n"):
+                        break
+        df = pd.DataFrame.from_dict(dictionary)
+        return df  # A PANDAS data frame object is returned
 
-    def parseStar(self, augment=False):
+    def __parseStar(self):
+        """
+        Used to read any table from a .star file, other than dataModelGeneral
+        Taken from PyEM package. Slightly modified to read only the specific table.
+        Returns a PANDAS dataframe
+        """
+
+        if self.tableName == "data_model_general":
+            return self.__readModelGeneral()
         headers = []
         foundTable = False
         foundheader = False
@@ -34,7 +64,6 @@ class starTable():
         lb = 0
         with open(self.starFile, "r") as star:
             for line in star:
-                print(line)
                 if line.startswith(self.tableName):
                     foundTable = True
                 else:
@@ -47,6 +76,7 @@ class starTable():
                         foundheader = True
                         readingHeader = True
                         head = line.split('#')[0].rstrip().lstrip('_')
+                        print(head)
                         headers.append(head)
                     else:
                         readingHeader = False
@@ -54,52 +84,33 @@ class starTable():
                         # Read through the data to see how long it is, record length in lb
                         # Use this value in the pd.read_csv line
                         if line.startswith("\n"):
-                            print("EndLine: " + line)
+                            lb -= 1
                             break
                         lb += 1
         df = pd.read_csv(self.starFile, skiprows=ln,
-                        delimiter='\s+', nrows=lb, header=None)
-        print("Headers:")
-        print(headers)
+                         delimiter='\s+', nrows=lb, header=None)
         df.columns = headers
         return df  # A PANDAS data frame object is returned
 
-    def readModelGeneral(self):
-        headers = []
-        foundTable = False
-        with open(self.starFile, "r") as star:
-            for line in star:
-                print(line)
-                if line.startswith(self.tableName):
-                    foundTable = True
-                if foundTable:
-                    if line.startswith("_"):
-                        foundheader = True
-                        readingHeader = True
-                        head = line.split('#')[0].rstrip().lstrip('_')
-                        headers.append(head)
-                    else:
-                        readingHeader = False
-                    if foundheader and not readingHeader:
-                        # Read through the data to see how long it is, record length in lb
-                        # Use this value in the pd.read_csv line
-                        if line.startswith("\n"):
-                            print("EndLine: " + line)
-                            break
-                        lb += 1
-        df = pd.read_csv(self.starFile, skiprows=ln,
-                        delimiter='\s+', nrows=lb, header=None)
-        print("Headers:")
-        print(headers)
-        df.columns = headers
-        return df  # A PANDAS data frame object is returned
-
-    def plot(self, xLabel, yLabel, title, absMax, absMin, yMaxBuffer, yMinBuffer):
-        pass
+    def plot(self):
+        #maxDist = self.df.max(axis=0).max()
+        #minDist = self.df.min(axis=0).min()
+        #ymax = maxDist + yMaxBuffer
+        #ymin = minDist - yMinBuffer
+        print(self.df.index)
+        #df.plot(x='index', y='resolution', style='o')
+    
 
     def writeToPDF(self):
         pass
-        
+
+    def __init__(self, starFile, tableName):
+        self.starFile = starFile
+        self.tableName = tableName
+        self.df = self.__parseStar()
+        print(self.df)
+
+
 class starFile():
 
     def __init__(self):
@@ -107,23 +118,23 @@ class starFile():
 
     def table(self, tableName):
         pass
-    
+
+
 class relionJob():
 
     def __init__(self, path):
         self.path = path
         self.tables = {}
 
-    
 
 class class3D(relionJob):
 
     def __init__(self, path):
         self.path = path
         self.tables = {}
-    
+
     def getTable(self):
-        #If we have the starTable, return it, if not parse it
+        # If we have the starTable, return it, if not parse it
         pass
 
     def showGraphs(self):
@@ -134,7 +145,7 @@ class class3D(relionJob):
 
     def renderMovie(self):
         pass
-    
+
     def numClasse(self):
         pass
 
@@ -155,13 +166,12 @@ def parseArgs():
     args = parser.parse_args()
     return args
 
+
 if __name__ == '__main__':
     args = parseArgs()
     path = args.path[0]
     job = class3D(path)
     job.showGraphs()
-
-
 
 
 """
@@ -178,9 +188,10 @@ Considerations:
     I would like to access it, but would have to code in a special case.
 """
 
+
 class Snake:
 
-    def __init__(self, name = ""):
+    def __init__(self, name=""):
         self.name = name
 
     def change_name(self, new_name):

@@ -299,7 +299,7 @@ def main():
     chimera(path, curr, args)
 
     # Uncomment the line below to automatically open the PDF:
-    #subprocess.call('xdg-open ' + jobName + '.pdf', shell=True)
+    subprocess.call('xdg-open ' + jobName + '.pdf', shell=True)
 
     """
     If the -i flag was input, show the plots in python

@@ -156,12 +156,13 @@ def saveImage(png_name, raytrace, flat, highRes, closeModelsAfterSaving=True, au
     rc("lighting reflectivity .8")
     rc("lighting brightness 1.1")
     if autoFitWindow:
+        rc("windowsize 1024 1024")
         rc("window")
     if raytrace:
         rc("lighting reflectivity .8")
         rc("lighting brightness 0.85")
         if(highRes):
-            rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 16  height 16 dpi 128 units inches")
+            rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 8  height 8 dpi 256 units inches")
         else:
             rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 8 height 8 dpi 128 units inches")
     else:
@@ -172,7 +173,7 @@ def saveImage(png_name, raytrace, flat, highRes, closeModelsAfterSaving=True, au
             rc("lighting mode two-point")
             rc("set silhouetteWidth 4")
         if(highRes):
-            rc("copy file " + png_name + " supersample 4 width 16 height 16 dpi 128 units inches")
+            rc("copy file " + png_name + " supersample 4 width 8 height 8 dpi 256 units inches")
         else:
             rc("copy file " + png_name + " supersample 4 width 8 height 8 dpi 128 units inches")
     if closeModelsAfterSaving:
