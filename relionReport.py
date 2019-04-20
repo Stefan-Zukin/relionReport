@@ -3,14 +3,21 @@
 
 import glob
 import argparse
-import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import os
 import subprocess
 import sys
 import numpy as np
-from IPython.display import display, HTML
+
+
+try:
+    import pandas as pd
+    from IPython.display import display, HTML
+    from chimera import runCommand as rc
+    from chimera import replyobj
+except:
+    pass
 
 
 """
@@ -190,8 +197,20 @@ class class3D(relionJob):
         pass
 
     def renderMovie(self):
+        chimera = ""
+        if sys.platform == "linux" or sys.platform == "linux2":
+            # linux
+            chimera = "/programs/x86_64-linux/chimera/1.13.1/bin/chimera"
+        elif sys.platform == "darwin":
+            # OS X
+            chimera = "/Applications/Chimera.app/Contents/MacOS/chimera"
         selfPath = os.path.realpath(__file__)
-        subprocess.run("python3 " + selfPath + " -chimera " + self.path, shell= True)
+        #print(chimera + " --script " + "\"" + selfPath + " -chimera" "\"")
+        #subprocess.run(chimera + " --script " + "\"" + "/Users/stefanzukin/Desktop/Programming/Python/relionReport/cScriptTest.py" + "\"", shell= True)
+        print(1)
+        #print(selfPath)
+        subprocess.run(chimera + " --script " + "\"" + selfPath + " -chimera " + "/" + "\"", shell= True)
+        print(2)
 
     def numClasses(self):
         pass
@@ -211,6 +230,7 @@ class chimeraRenderer():
             from chimera import replyobj
         except:
             pass
+        rc("open /Users/stefanzukin/Desktop/postprocess.mrc")
 
 def parseArgs():
     """Parses arguments and returns them as an args object"""
@@ -234,15 +254,17 @@ def parseArgs():
 if __name__ == '__main__':
     args = parseArgs()
     path = args.path[0]
-    job = class3D(path)
-    if(args.i):
-        job.graph()
+    subprocess.call("echo  chimeraFlag:" + str(args.chimera), shell=True)
     if(args.chimera):
-        print("Chimera version")
-    if(not args.chimera):
-        job.renderMovie()
-    
-
+        renderer = chimeraRenderer()
+        subprocess.call("echo  3", shell=True)
+        #sys.exit(0) 
+    else:
+        job = class3D(path)
+        if(args.i):
+            job.graph()
+        if(not args.chimera):
+            job.renderMovie()
 
 """
 Considerations:
