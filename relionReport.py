@@ -9,6 +9,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 import os
 import subprocess
 import sys
+import numpy as np
+from IPython.display import display, HTML
 
 
 """
@@ -22,7 +24,7 @@ Invariants:
 
 class starTable():
 
-    def __readModelGeneral(self):
+    def __readModelGeneral(self, starFile):
         """
         This function is a special case to read the ModelGeneral table
         This is necessary because ModelGeneral has different formatting than all the other tables
@@ -32,7 +34,7 @@ class starTable():
         dictionary = {}
         foundTable = False
         reading = False
-        with open(self.starFile, "r") as star:
+        with open(starFile, "r") as star:
             for line in star:
                 if line.startswith(self.tableName):
                     foundTable = True
@@ -48,7 +50,7 @@ class starTable():
         df = pd.DataFrame.from_dict(dictionary)
         return df  # A PANDAS data frame object is returned
 
-    def __parseStar(self):
+    def __parseStar(self, starFile):
         """
         Used to read any table from a .star file, other than dataModelGeneral
         Taken from PyEM package. Slightly modified to read only the specific table.
@@ -56,13 +58,14 @@ class starTable():
         """
 
         if self.tableName == "data_model_general":
-            return self.__readModelGeneral()
+            return self.__readModelGeneral(starFile)
         headers = []
         foundTable = False
         foundheader = False
         ln = 0
         lb = 0
-        with open(self.starFile, "r") as star:
+        #print("starFile:", starFile)
+        with open(starFile, "r") as star:
             for line in star:
                 if line.startswith(self.tableName):
                     foundTable = True
@@ -76,7 +79,6 @@ class starTable():
                         foundheader = True
                         readingHeader = True
                         head = line.split('#')[0].rstrip().lstrip('_')
-                        print(head)
                         headers.append(head)
                     else:
                         readingHeader = False
@@ -87,68 +89,128 @@ class starTable():
                             lb -= 1
                             break
                         lb += 1
-        df = pd.read_csv(self.starFile, skiprows=ln,
+        df = pd.read_csv(starFile, skiprows=ln,
                          delimiter='\s+', nrows=lb, header=None)
         df.columns = headers
         return df  # A PANDAS data frame object is returned
 
-    def plot(self):
-        #maxDist = self.df.max(axis=0).max()
-        #minDist = self.df.min(axis=0).min()
-        #ymax = maxDist + yMaxBuffer
-        #ymin = minDist - yMinBuffer
-        print(self.df.index)
-        #df.plot(x='index', y='resolution', style='o')
-    
+    def graph(self, parameter):
+        paramTable = self.table[parameter]
+        paramTable.unstack().plot(kind='line')
 
-    def writeToPDF(self):
-        pass
-
-    def __init__(self, starFile, tableName):
-        self.starFile = starFile
+    def __init__(self, starFiles, tableName):
+        self.starFiles = starFiles
         self.tableName = tableName
-        self.df = self.__parseStar()
-        print(self.df)
-
-
-class starFile():
-
-    def __init__(self):
-        pass
-
-    def table(self, tableName):
-        pass
-
+        iterations = {}
+        it = 0
+        for s in starFiles:
+            df = self.__parseStar(s)
+            df.index.name = "class"
+            iterations[it] = df
+            it += 1
+        self.table = pd.concat(iterations.values(), axis=0, keys=iterations.keys())
+        self.table.to_html("meta.html")
+        #for i in self.table.keys():
+            #print(i)
+        #self.table.unstack()
+        #self.table.to_html("met1.html")
+        #print(self.table)
+        #self.df = self.__parseStar()
+        #resolutions = self.table["rlnClassDistribution"]
+        #print(self.table["rlnEstimatedResolution"][0])
+        #resolutions.unstack().plot(kind='line')
+        #plt.show()
+        #print(p)
 
 class relionJob():
+    tables = []
+    parameters = []
+
+    def __sortModelStars(self, model=" "):
+        """Sorting method which sorts model.star files by iteration number
+        Important to do this double split, to get only the filename of the .star
+        Otherwise had a bug if enclosing folders had 'it" in the name, like /titan/"""
+        s = model.split("run_")[1]
+        s = s.split("it")
+        it = int(s[1][0:3])
+        if s[0].startswith("run_ct"):
+            it += 1
+        return it
+
+    def __readModelStars(self):
+        #print("Parsing model.star files")
+        modelStars = glob.glob(self.path + '/*model.star')
+        if len(modelStars) == 0:
+            raise Exception("ERROR: Could not find a model.star file")
+        modelStars.sort(key=self.__sortModelStars)
+        return modelStars
+
+    def __getJobName(self):
+        split = self.path.split("/")
+        return split[len(split)-1]
+
+    def read(self, tableName):
+        table = starTable(self.modelStars, tableName)
+        self.tables.append(table)
+
+    def graph(self):
+        for t in self.tables:
+            for p in self.parameters:
+                print(p)
+                t.graph(p)
+        plt.show()
+
+    def graphToPDF(self):
+        #Works, the only thing I need to do is get the jobName
+        pp = PdfPages(self.jobName + '.pdf')
+        for t in self.tables:
+            for p in self.parameters:
+                t.graph(p)
+                pp.savefig()
+                plt.close()
+        pp.close()
 
     def __init__(self, path):
-        self.path = path
-        self.tables = {}
+        self.path = os.path.abspath(path)
+        self.jobName = self.__getJobName()
+        self.modelStars = self.__readModelStars()
+        
 
 
 class class3D(relionJob):
 
-    def __init__(self, path):
-        self.path = path
-        self.tables = {}
+    def __addParameters(self):
+        self.parameters.append("rlnClassDistribution")
+        self.parameters.append("rlnEstimatedResolution")
+        self.parameters.append("rlnAccuracyRotations")
+        self.parameters.append("rlnAccuracyTranslations")
 
     def getTable(self):
         # If we have the starTable, return it, if not parse it
         pass
 
-    def showGraphs(self):
-        pass
-
-    def graphToPDF(self):
-        pass
-
     def renderMovie(self):
+        selfPath = os.path.realpath(__file__)
+        subprocess.run("python3 " + selfPath + " -chimera " + self.path, shell= True)
+
+    def numClasses(self):
         pass
 
-    def numClasse(self):
-        pass
+    def __init__(self, path):
+        super(class3D, self).__init__(path)
+        self.__addParameters()
+        self.read("data_model_classes")
+        self.graphToPDF()
+        
+class chimeraRenderer():
 
+    def __init__(self):
+        print('hello')
+        try:
+            from chimera import runCommand as rc
+            from chimera import replyobj
+        except:
+            pass
 
 def parseArgs():
     """Parses arguments and returns them as an args object"""
@@ -163,6 +225,8 @@ def parseArgs():
         '-f', dest='f', action='store_true', help='Render images as flat, without shadows or highlights')
     parser.add_argument(
         '-hr', dest='hr', action='store_true', help='Render higher resolution images. Will make the process slower.')
+    parser.add_argument(
+        '-chimera', dest='chimera', action='store_true', help='Execute the script run from chimera')
     args = parser.parse_args()
     return args
 
@@ -171,7 +235,13 @@ if __name__ == '__main__':
     args = parseArgs()
     path = args.path[0]
     job = class3D(path)
-    job.showGraphs()
+    if(args.i):
+        job.graph()
+    if(args.chimera):
+        print("Chimera version")
+    if(not args.chimera):
+        job.renderMovie()
+    
 
 
 """
@@ -186,14 +256,17 @@ Considerations:
         once it finds the correct table. Even changing it so it reads the whole table took only 0.009seconds.
     -For some reason, the data_model_general table is formatted differently from all the other star file tables
     I would like to access it, but would have to code in a special case.
+    -What I really want is a 3D data table
+        On one axis will be the class number,
+        On one axis will be the data
+        On one axis will be the iteration number
+        ie:
+
+        Class   Resolution
+        0          5
+        1          4
+        2          7
+
+        And extending vertically is the different iterations.
+    This will have to be done for an individual star table. So I can implement it there.
 """
-
-
-class Snake:
-
-    def __init__(self, name=""):
-        self.name = name
-
-    def change_name(self, new_name):
-        self.name = new_name
-        print(self.name)
