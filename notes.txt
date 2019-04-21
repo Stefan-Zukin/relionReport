@@ -40,6 +40,12 @@ FFMPEG:
 ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p test.mp4
 
 
+PANDAS 3D Data:
+https://pandas.pydata.org/pandas-docs/stable/user_guide/advanced.html
+https://www.datacamp.com/community/tutorials/pandas-multi-index
+https://stackoverflow.com/questions/23600582/concatenate-pandas-columns-under-new-multi-index-level
+https://stackoverflow.com/questions/25386870/pandas-plotting-with-multi-index
+
 
 
 Example script:

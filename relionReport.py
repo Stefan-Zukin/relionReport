@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import numpy as np
+from datetime import datetime
 
 
 try:
@@ -20,23 +21,13 @@ except:
     pass
 
 
-"""
-Invariants:
-    -The path variable should always hold the absolute path to the target directory.
-    -The curr variable should always hold the absolute path to the directory from which the script was run.
-
-
-"""
-
-
 class starTable():
 
     def __readModelGeneral(self, starFile):
         """
         This function is a special case to read the ModelGeneral table
         This is necessary because ModelGeneral has different formatting than all the other tables
-        in the model.star file
-        Returns a PANDAS dataframe
+        in the model.star file. Returns a Pandas dataframe
         """
         dictionary = {}
         foundTable = False
@@ -55,13 +46,12 @@ class starTable():
                     if reading and line.startswith("\n"):
                         break
         df = pd.DataFrame.from_dict(dictionary)
-        return df  # A PANDAS data frame object is returned
+        return df  # A Pandas data frame object is returned
 
     def __parseStar(self, starFile):
         """
         Used to read any table from a .star file, other than dataModelGeneral
-        Taken from PyEM package. Slightly modified to read only the specific table.
-        Returns a PANDAS dataframe
+        Taken from PyEM package. Slightly modified for my use. Returns a Pandas dataframe
         """
 
         if self.tableName == "data_model_general":
@@ -115,19 +105,21 @@ class starTable():
             df.index.name = "class"
             iterations[it] = df
             it += 1
-        self.table = pd.concat(iterations.values(), axis=0, keys=iterations.keys())
+        self.table = pd.concat(iterations.values(),
+                               axis=0, keys=iterations.keys())
         self.table.to_html("meta.html")
-        #for i in self.table.keys():
-            #print(i)
-        #self.table.unstack()
-        #self.table.to_html("met1.html")
-        #print(self.table)
+        # for i in self.table.keys():
+        # print(i)
+        # self.table.unstack()
+        # self.table.to_html("met1.html")
+        # print(self.table)
         #self.df = self.__parseStar()
         #resolutions = self.table["rlnClassDistribution"]
-        #print(self.table["rlnEstimatedResolution"][0])
-        #resolutions.unstack().plot(kind='line')
-        #plt.show()
-        #print(p)
+        # print(self.table["rlnEstimatedResolution"][0])
+        # resolutions.unstack().plot(kind='line')
+        # plt.show()
+        # print(p)
+
 
 class relionJob():
     tables = []
@@ -168,7 +160,6 @@ class relionJob():
         plt.show()
 
     def graphToPDF(self):
-        #Works, the only thing I need to do is get the jobName
         pp = PdfPages(self.jobName + '.pdf')
         for t in self.tables:
             for p in self.parameters:
@@ -181,7 +172,6 @@ class relionJob():
         self.path = os.path.abspath(path)
         self.jobName = self.__getJobName()
         self.modelStars = self.__readModelStars()
-        
 
 
 class class3D(relionJob):
@@ -208,9 +198,10 @@ class class3D(relionJob):
         #print(chimera + " --script " + "\"" + selfPath + " -chimera" "\"")
         #subprocess.run(chimera + " --script " + "\"" + "/Users/stefanzukin/Desktop/Programming/Python/relionReport/cScriptTest.py" + "\"", shell= True)
         print(1)
-        #print(selfPath)
-        subprocess.run(chimera + " --script " + "\"" + selfPath + " -chimera " + "/" + "\"", shell= True)
-        print(2)
+        # print(selfPath)
+        subprocess.run(chimera + " --script " + "\"" +
+                       selfPath + " -chimera " + self.path + "\"", shell=True)
+        print(3)
 
     def numClasses(self):
         pass
@@ -220,17 +211,134 @@ class class3D(relionJob):
         self.__addParameters()
         self.read("data_model_classes")
         self.graphToPDF()
-        
+
+
 class chimeraRenderer():
 
-    def __init__(self):
-        print('hello')
+    def __getJobName(self):
+        split = self.path.split("/")
+        return split[len(split)-1]
+
+    def __getCurrentDirectory(self):
+        return os.getcwd()
+
+    def __sortMrcs(self, model=" "):
+        """Sorting method to sort by mrc iteration number"""
+
+        s = model.split("it")
+        it = int(s[1][0:3])
+        if s[0].startswith("run_ct"):
+            it += 1
+        return it
+
+    def __sortClasses(self, model=" "):
+        """Sorting method to sort by mrc class number"""
+
+        s = model.split("class")
+        classNum = int(s[1][0:3])
+        return classNum
+
+    def __readMrcs(self):
+        """Goes to the directory given in path, then reads in all the .mrc files
+        Iterates over the read MRCs, organizing them by iteration number and class number.
+        Returns a dictionary where the keys are the iterations in order, and the item is a list
+        with the classes for that iteration in order """
+
+        mrcs = glob.glob(self.path + '/*.mrc')
+        if len(mrcs) == 0:
+            raise Exception("ERROR: Could not find any mrc files")
+        mrcs.sort(key=self.__sortMrcs)
+        iterations = {}
+        for fn in mrcs:
+            s = fn.split("it")
+            it = int(s[1][0:3])
+            if s[0].startswith("run_ct"):
+                it += 1
+            if(it in iterations):
+                iterations[it] = iterations[it] + [fn]
+            else:
+                iterations[it] = [fn]
+        for k in iterations.keys():
+            iterations[k].sort(key=self.__sortClasses)
+        return iterations
+    
+    def __saveImage(self, png_name, raytrace, flat, highRes, closeModelsAfterSaving=True, autoFitWindow=True):
         try:
             from chimera import runCommand as rc
-            from chimera import replyobj
         except:
             pass
-        rc("open /Users/stefanzukin/Desktop/postprocess.mrc")
+        rc("lighting contrast .7")
+        rc("lighting sharpness 100")
+        rc("lighting reflectivity .8")
+        rc("lighting brightness 1.1")
+        if autoFitWindow:
+            rc("windowsize 1024 1024")
+            rc("window")
+        if raytrace:
+            rc("lighting reflectivity .8")
+            rc("lighting brightness 0.85")
+            if(highRes):
+                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 8  height 8 dpi 256 units inches")
+            else:
+                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 8 height 8 dpi 128 units inches")
+        else:
+            if(flat):
+                rc("lighting mode ambient")
+                rc("set silhouetteWidth 8")
+            else:
+                rc("lighting mode two-point")
+                rc("set silhouetteWidth 4")
+            if(highRes):
+                rc("copy file " + png_name + " supersample 4 width 8 height 8 dpi 256 units inches")
+            else:
+                rc("copy file " + png_name + " supersample 4 width 8 height 8 dpi 128 units inches")
+        if closeModelsAfterSaving:
+            rc("close all")
+    
+    def render(self):
+        try:
+            from chimera import runCommand as rc
+        except:
+            pass
+        for it in self.iterations.keys():
+            modelNum = 0
+            rc("cd " + self.path)
+            for c in self.iterations[it]:
+                rc("open " + c)
+                rc("volume #" + str(modelNum) + " sdlevel 7")
+                rc("volume #" + str(modelNum) + " step 1")
+                modelNum += 1
+            rc("tile")
+            rc("preset apply publication 1")
+            num = str(it)
+            while len(num) < 4:
+                num = "0" + num
+            png_name = "frame" + num + ".png"
+            subprocess.call("echo \"Rendering iteration " + str(it) + " at " + datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
+            rc("cd " + self.output)
+            self.__saveImage(png_name, False, False, False)  #PUT arguments
+            finalIt = it
+        
+    def makeOutputFolder(self):   
+        self.current = self.__getCurrentDirectory()
+        self.jobName = self.__getJobName()
+        self.output = self.current + "/" + self.jobName + "Images"
+        try:
+            os.mkdir(self.output)
+        except:
+            pass
+
+    def __init__(self, path):
+        self.path = path
+        self.makeOutputFolder()
+        
+        #subprocess.call("echo " + str(self.output), shell=True)
+        self.iterations = self.__readMrcs()
+        self.render()
+        
+        #rc("open /Users/stefanzukin/Desktop/postprocess.mrc")
+
+
 
 def parseArgs():
     """Parses arguments and returns them as an args object"""
@@ -255,10 +363,15 @@ if __name__ == '__main__':
     args = parseArgs()
     path = args.path[0]
     subprocess.call("echo  chimeraFlag:" + str(args.chimera), shell=True)
+    subprocess.call("echo  Path:" + str(path), shell=True)
+
+    """ If this script is called from chimera, then args.chimera = True
+    If this is the case, we run a totally different script than if it were
+    called by the used alone"""
     if(args.chimera):
-        renderer = chimeraRenderer()
-        subprocess.call("echo  3", shell=True)
-        #sys.exit(0) 
+        renderer = chimeraRenderer(path)
+        subprocess.call("echo  2", shell=True)
+        # sys.exit(0)
     else:
         job = class3D(path)
         if(args.i):
@@ -267,28 +380,12 @@ if __name__ == '__main__':
             job.renderMovie()
 
 """
-Considerations:
-    -The way I have it set up now, you would have to read through the star file for
-    each table you want to read. It's pretty redundant. Maybe I can just read the star file once
-    and get all the tables. Too much ram? If I open up 40 model.stars with everything as a dataframe
-    Thats at least 40 x .5Mb around 20Mb. Not a huge amount, but honestlty that also seems like a bad
-    solution.
-    -I'll run some tests and see how slow it is to read through a file.
-        -Nevermind. It's actually very fast to read through these files. It terminates
-        once it finds the correct table. Even changing it so it reads the whole table took only 0.009seconds.
-    -For some reason, the data_model_general table is formatted differently from all the other star file tables
-    I would like to access it, but would have to code in a special case.
-    -What I really want is a 3D data table
-        On one axis will be the class number,
-        On one axis will be the data
-        On one axis will be the iteration number
-        ie:
-
-        Class   Resolution
-        0          5
-        1          4
-        2          7
-
-        And extending vertically is the different iterations.
-    This will have to be done for an individual star table. So I can implement it there.
+TODO:
+-Make the graphs autoformat in a nice matter. Right now I have nothing.
+-Make the chimera renderer work the way it does in the old version.
+-Make the chimera renderer save to the correct output folder.
+    Want it to be the directory where the script was run in a new folder with the job name
+    Line 286, hardcoded for now.
+-Make the arguments work for rendering
+-Try to avoid re-importing everything for the saveImage function.
 """
