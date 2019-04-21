@@ -161,6 +161,7 @@ class relionJob():
 
     def graphToPDF(self):
         pp = PdfPages(self.jobName + '.pdf')
+        print("Saving graphs as " + self.jobName + ".pdf")
         for t in self.tables:
             for p in self.parameters:
                 t.graph(p)
@@ -187,21 +188,21 @@ class class3D(relionJob):
         pass
 
     def renderMovie(self):
-        chimera = ""
+        chimera = "" #Enter your chimera executable location here
         if sys.platform == "linux" or sys.platform == "linux2":
             # linux
             chimera = "/programs/x86_64-linux/chimera/1.13.1/bin/chimera"
         elif sys.platform == "darwin":
             # OS X
             chimera = "/Applications/Chimera.app/Contents/MacOS/chimera"
+        else:
+            if(chimera == ""):
+                raise Exception("Your operating system was not recognized so the script cannot auto-detect your chimera executable location. "
+                            + "Please manually edit the script to include your chimera executable location at line 190")
         selfPath = os.path.realpath(__file__)
-        #print(chimera + " --script " + "\"" + selfPath + " -chimera" "\"")
-        #subprocess.run(chimera + " --script " + "\"" + "/Users/stefanzukin/Desktop/Programming/Python/relionReport/cScriptTest.py" + "\"", shell= True)
-        print(1)
-        # print(selfPath)
+        print("Rendering images in Chimera")
         subprocess.run(chimera + " --script " + "\"" +
                        selfPath + " -chimera " + self.path + "\"", shell=True)
-        print(3)
 
     def numClasses(self):
         pass
@@ -261,7 +262,7 @@ class chimeraRenderer():
         for k in iterations.keys():
             iterations[k].sort(key=self.__sortClasses)
         return iterations
-    
+
     def __saveImage(self, png_name, raytrace, flat, highRes, closeModelsAfterSaving=True, autoFitWindow=True):
         try:
             from chimera import runCommand as rc
@@ -278,9 +279,11 @@ class chimeraRenderer():
             rc("lighting reflectivity .8")
             rc("lighting brightness 0.85")
             if(highRes):
-                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 8  height 8 dpi 256 units inches")
+                rc("copy file " + png_name +
+                   " supersample 4 raytrace rtwait rtclean width 8  height 8 dpi 256 units inches")
             else:
-                rc("copy file " + png_name + " supersample 4 raytrace rtwait rtclean width 8 height 8 dpi 128 units inches")
+                rc("copy file " + png_name +
+                   " supersample 4 raytrace rtwait rtclean width 8 height 8 dpi 128 units inches")
         else:
             if(flat):
                 rc("lighting mode ambient")
@@ -289,12 +292,14 @@ class chimeraRenderer():
                 rc("lighting mode two-point")
                 rc("set silhouetteWidth 4")
             if(highRes):
-                rc("copy file " + png_name + " supersample 4 width 8 height 8 dpi 256 units inches")
+                rc("copy file " + png_name +
+                   " supersample 4 width 8 height 8 dpi 256 units inches")
             else:
-                rc("copy file " + png_name + " supersample 4 width 8 height 8 dpi 128 units inches")
+                rc("copy file " + png_name +
+                   " supersample 4 width 8 height 8 dpi 128 units inches")
         if closeModelsAfterSaving:
             rc("close all")
-    
+
     def render(self):
         try:
             from chimera import runCommand as rc
@@ -314,34 +319,38 @@ class chimeraRenderer():
             while len(num) < 4:
                 num = "0" + num
             png_name = "frame" + num + ".png"
-            subprocess.call("echo \"Rendering iteration " + str(it) + " at " + datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
+            subprocess.call("echo \"Finished iteration " + str(it) + " at " +
+                            datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
             rc("cd " + self.output)
-            self.__saveImage(png_name, False, False, False)  #TODO: Make arguments work
+            # TODO: Make arguments work
+            self.__saveImage(png_name, False, False, False)
             finalIt = it
 
-        #Spin with the final iteration
+        # Spin with the final iteration
         modelNum = 0
-        subprocess.call("echo \"Rendering final spin at " + datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
+        subprocess.call("echo \"Rendering final spin at " +
+                        datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
         rc("cd " + path)
         for c in self.iterations[finalIt]:
-                rc("open " + c)
-                rc("volume #" + str(modelNum) + " sdlevel 7")
-                rc("volume #" + str(modelNum) + " step 1")
-                modelNum += 1
+            rc("open " + c)
+            rc("volume #" + str(modelNum) + " sdlevel 7")
+            rc("volume #" + str(modelNum) + " step 1")
+            modelNum += 1
         rc("tile")
         rc("preset apply publication 1")
         rc("window")
         for x in range(90):
             rc("turn y 4 model #0-" + str(modelNum))
-            num = str(finalIt + 1 + x) 
+            num = str(finalIt + 1 + x)
             while len(num) < 4:
-                    num = "0" + num
+                num = "0" + num
             png_name = "frame" + num + ".png"
             rc("cd " + self.output)
-            self.__saveImage(png_name, False, False, False, False, False) #TODO: make arguments work
+            self.__saveImage(png_name, False, False, False,
+                             False, False)  # TODO: make arguments work
         rc("stop now")
-        
-    def makeOutputFolder(self):   
+
+    def makeOutputFolder(self):
         self.current = self.__getCurrentDirectory()
         self.jobName = self.__getJobName()
         self.output = self.current + "/" + self.jobName + "Images"
@@ -353,13 +362,8 @@ class chimeraRenderer():
     def __init__(self, path):
         self.path = path
         self.makeOutputFolder()
-        
-        #subprocess.call("echo " + str(self.output), shell=True)
         self.iterations = self.__readMrcs()
         self.render()
-        
-        #rc("open /Users/stefanzukin/Desktop/postprocess.mrc")
-
 
 
 def parseArgs():
@@ -386,16 +390,12 @@ def parseArgs():
 if __name__ == '__main__':
     args = parseArgs()
     path = args.path[0]
-    subprocess.call("echo  chimeraFlag:" + str(args.chimera), shell=True)
-    subprocess.call("echo  Path:" + str(path), shell=True)
 
     """ If this script is called from chimera, then args.chimera = True
     If this is the case, we run a totally different script than if it were
     called by the used alone"""
     if(args.chimera):
         renderer = chimeraRenderer(path)
-        subprocess.call("echo  2", shell=True)
-        # sys.exit(0)
     else:
         job = class3D(path)
         if(args.i):
@@ -407,9 +407,7 @@ if __name__ == '__main__':
 TODO:
 -Make the graphs autoformat in a nice matter. Right now I have nothing.
 -Make the chimera renderer work the way it does in the old version.
--Make the chimera renderer save to the correct output folder.
-    Want it to be the directory where the script was run in a new folder with the job name
-    Line 286, hardcoded for now.
 -Make the arguments work for rendering
 -Try to avoid re-importing everything for the saveImage function.
+    Maybe it doesn't matter
 """
