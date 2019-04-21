@@ -370,6 +370,8 @@ def parseArgs():
     parser.add_argument(
         '-i', dest='i', action='store_true', help='Show the interactive form of the graphs in addition to saving to a PDF.')
     parser.add_argument(
+        '-m', dest='m', action='store_true', help='Render a movie of the job using Chimera')
+    parser.add_argument(
         '-r', dest='r', action='store_true', help='Render images using Chimera raytracing')
     parser.add_argument(
         '-f', dest='f', action='store_true', help='Render images as flat, without shadows or highlights')
@@ -398,7 +400,7 @@ if __name__ == '__main__':
         job = class3D(path)
         if(args.i):
             job.graph()
-        if(not args.chimera):
+        if(args.m):
             job.renderMovie()
 
 """
