@@ -316,8 +316,30 @@ class chimeraRenderer():
             png_name = "frame" + num + ".png"
             subprocess.call("echo \"Rendering iteration " + str(it) + " at " + datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
             rc("cd " + self.output)
-            self.__saveImage(png_name, False, False, False)  #PUT arguments
+            self.__saveImage(png_name, False, False, False)  #TODO: Make arguments work
             finalIt = it
+
+        #Spin with the final iteration
+        modelNum = 0
+        subprocess.call("echo \"Rendering final spin at " + datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
+        rc("cd " + path)
+        for c in self.iterations[finalIt]:
+                rc("open " + c)
+                rc("volume #" + str(modelNum) + " sdlevel 7")
+                rc("volume #" + str(modelNum) + " step 1")
+                modelNum += 1
+        rc("tile")
+        rc("preset apply publication 1")
+        rc("window")
+        for x in range(90):
+            rc("turn y 4 model #0-" + str(modelNum))
+            num = str(finalIt + 1 + x) 
+            while len(num) < 4:
+                    num = "0" + num
+            png_name = "frame" + num + ".png"
+            rc("cd " + self.output)
+            self.__saveImage(png_name, False, False, False, False, False) #TODO: make arguments work
+        rc("stop now")
         
     def makeOutputFolder(self):   
         self.current = self.__getCurrentDirectory()
