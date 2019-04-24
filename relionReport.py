@@ -314,8 +314,8 @@ class chimeraRenderer():
             for c in self.iterations[it]:
                 rc("open " + c)
                 rc("volume #" + str(modelNum) + " sdlevel 7")
-                rc("volume #" + str(modelNum) + " step 1")
                 modelNum += 1
+            rc("volume all step 1")
             rc("tile")
             rc("preset apply publication 1")
             num = str(it)
@@ -325,7 +325,6 @@ class chimeraRenderer():
             subprocess.call("echo \"Finished iteration " + str(it) + " at " +
                             datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
             rc("cd " + self.output)
-            # TODO: Make arguments work
             self.__saveImage(png_name, args.r, args.f, args.hr)
             finalIt = it
 
@@ -334,11 +333,11 @@ class chimeraRenderer():
         subprocess.call("echo \"Rendering final spin at " +
                         datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
         rc("cd " + path)
-        for c in self.iterations[finalIt]:
+        for c in self.iterations[it]:
             rc("open " + c)
             rc("volume #" + str(modelNum) + " sdlevel 7")
-            rc("volume #" + str(modelNum) + " step 1")
             modelNum += 1
+        rc("volume all step 1")
         rc("tile")
         rc("preset apply publication 1")
         rc("window")
@@ -410,8 +409,4 @@ if __name__ == '__main__':
 """
 TODO:
 -Make the graphs autoformat in a nice matter. Right now I have nothing.
--Make the chimera renderer work the way it does in the old version.
--Make the arguments work for rendering
--Try to avoid re-importing everything for the saveImage function.
-    Maybe it doesn't matter
 """
