@@ -207,7 +207,6 @@ class class3D(relionJob):
             argsString += "-r "
         if(args.hr):
             argsString += "-hr "
-        print(args)
         subprocess.run(chimera + " --script " + "\"" +
                        selfPath + " -chimera " + argsString + self.path + "\"", shell=True)
 
@@ -294,7 +293,7 @@ class chimeraRenderer():
             rc("window")
         if(flat):
             rc("lighting mode ambient")
-            rc("set silhouetteWidth 8")
+            rc("set silhouetteWidth 16")
         else:
             rc("lighting mode two-point")
             rc("set silhouetteWidth 4")
@@ -322,10 +321,10 @@ class chimeraRenderer():
             while len(num) < 4:
                 num = "0" + num
             png_name = "frame" + num + ".png"
-            subprocess.call("echo \"Finished iteration " + str(it) + " at " +
-                            datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
             rc("cd " + self.output)
             self.__saveImage(png_name, args.r, args.f, args.hr)
+            subprocess.call("echo \"Finished iteration " + str(it) + " at " +
+                            datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
             finalIt = it
 
         # Spin with the final iteration
