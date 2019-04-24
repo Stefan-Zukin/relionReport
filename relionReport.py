@@ -200,9 +200,16 @@ class class3D(relionJob):
                 raise Exception("Your operating system was not recognized so the script cannot auto-detect your chimera executable location. "
                             + "Please manually edit the script to include your chimera executable location at line 190")
         selfPath = os.path.realpath(__file__)
-        print("Rendering images in Chimera")
+        argsString = " "
+        if(args.f):
+            argsString += "-f "
+        if(args.r):
+            argsString += "-r "
+        if(args.hr):
+            argsString += "-hr "
+        print(args)
         subprocess.run(chimera + " --script " + "\"" +
-                       selfPath + " -chimera " + self.path + "\"", shell=True)
+                       selfPath + " -chimera " + argsString + self.path + "\"", shell=True)
 
     def numClasses(self):
         pass
@@ -272,31 +279,27 @@ class chimeraRenderer():
         rc("lighting sharpness 100")
         rc("lighting reflectivity .8")
         rc("lighting brightness 1.1")
+        raytraceString = ""
+        if(raytrace):
+            rc("lighting reflectivity .8")
+            rc("lighting brightness 0.85")
+            raytraceString = "raytrace rtwait rtclean "
+        resolutionString = ""
+        if(highRes):
+            resolutionString = "width 8  height 8 dpi 256 units inches"
+        else:
+            resolutionString = "width 8  height 8 dpi 128 units inches"
         if autoFitWindow:
             rc("windowsize 1024 1024")
             rc("window")
-        if raytrace:
-            rc("lighting reflectivity .8")
-            rc("lighting brightness 0.85")
-            if(highRes):
-                rc("copy file " + png_name +
-                   " supersample 4 raytrace rtwait rtclean width 8  height 8 dpi 256 units inches")
-            else:
-                rc("copy file " + png_name +
-                   " supersample 4 raytrace rtwait rtclean width 8 height 8 dpi 128 units inches")
+        if(flat):
+            rc("lighting mode ambient")
+            rc("set silhouetteWidth 8")
         else:
-            if(flat):
-                rc("lighting mode ambient")
-                rc("set silhouetteWidth 8")
-            else:
-                rc("lighting mode two-point")
-                rc("set silhouetteWidth 4")
-            if(highRes):
-                rc("copy file " + png_name +
-                   " supersample 4 width 8 height 8 dpi 256 units inches")
-            else:
-                rc("copy file " + png_name +
-                   " supersample 4 width 8 height 8 dpi 128 units inches")
+            rc("lighting mode two-point")
+            rc("set silhouetteWidth 4")
+        rc("copy file " + png_name +
+                   " supersample 4 " + raytraceString + resolutionString)
         if closeModelsAfterSaving:
             rc("close all")
 
@@ -323,7 +326,7 @@ class chimeraRenderer():
                             datetime.now().strftime('%H:%M:%S') + "\"", shell=True)
             rc("cd " + self.output)
             # TODO: Make arguments work
-            self.__saveImage(png_name, False, False, False)
+            self.__saveImage(png_name, args.r, args.f, args.hr)
             finalIt = it
 
         # Spin with the final iteration
@@ -346,8 +349,8 @@ class chimeraRenderer():
                 num = "0" + num
             png_name = "frame" + num + ".png"
             rc("cd " + self.output)
-            self.__saveImage(png_name, False, False, False,
-                             False, False)  # TODO: make arguments work
+            self.__saveImage(png_name, args.r, args.f, args.hr,
+                             False, False)
         rc("stop now")
 
     def makeOutputFolder(self):
@@ -359,11 +362,12 @@ class chimeraRenderer():
         except:
             pass
 
-    def __init__(self, path):
+    def __init__(self, path, args):
         self.path = path
         self.makeOutputFolder()
         self.iterations = self.__readMrcs()
         self.render()
+        self.args = args
 
 
 def parseArgs():
@@ -395,7 +399,7 @@ if __name__ == '__main__':
     If this is the case, we run a totally different script than if it were
     called by the used alone"""
     if(args.chimera):
-        renderer = chimeraRenderer(path)
+        renderer = chimeraRenderer(path, args)
     else:
         job = class3D(path)
         if(args.i):
