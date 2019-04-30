@@ -235,6 +235,10 @@ class class3D(relionJob):
         self.read("data_model_classes")
         self.graphToPDF()
 
+class refine3D(relionJob):
+    pass
+
+
 
 class chimeraRenderer():
 
@@ -431,4 +435,6 @@ if __name__ == '__main__':
 """
 TODO:
 -Make the graphs autoformat in a nice matter. Right now I have nothing.
+-Make the class for 3D refinements
+-Make it not crash when filling the table with N/A values, such as during a alignment free classification
 """
