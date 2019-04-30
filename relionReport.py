@@ -236,7 +236,17 @@ class class3D(relionJob):
         self.graphToPDF()
 
 class refine3D(relionJob):
-    pass
+
+    def __addParameters(self):
+        self.parameters.append("rlnEstimatedResolution")
+        self.parameters.append("rlnAccuracyRotations")
+        self.parameters.append("rlnAccuracyTranslations")
+
+    def __init__(self, path):
+        super(refine3D, self).__init__(path)
+        self.__addParameters()
+        self.read("data_model_classes")
+        self.graphToPDF()
 
 
 
