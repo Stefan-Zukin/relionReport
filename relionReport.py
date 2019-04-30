@@ -140,7 +140,7 @@ class relionJob():
 
     def __readModelStars(self):
         #print("Parsing model.star files")
-        modelStars = glob.glob(self.path + '/*model.star')
+        modelStars = glob.glob(self.path + '/run_*t*model.star')
         if len(modelStars) == 0:
             raise Exception("ERROR: Could not find a model.star file")
         modelStars.sort(key=self.__sortModelStars)
@@ -236,6 +236,16 @@ class class3D(relionJob):
         self.graphToPDF()
 
 class refine3D(relionJob):
+    
+    def __readModelStars(self):
+        #print("Parsing model.star files")
+        modelStars = glob.glob(self.path + '/run_*t*half1_model.star')
+        for name in modelStars:
+            print(name)
+        if len(modelStars) == 0:
+            raise Exception("ERROR: Could not find a model.star file")
+        #modelStars.sort(key=super.__sortModelStars)
+        return modelStars
 
     def __addParameters(self):
         self.parameters.append("rlnEstimatedResolution")
@@ -244,6 +254,7 @@ class refine3D(relionJob):
 
     def __init__(self, path):
         super(refine3D, self).__init__(path)
+        self.modelStars = self.__readModelStars()
         self.__addParameters()
         self.read("data_model_classes")
         self.graphToPDF()
@@ -430,11 +441,11 @@ if __name__ == '__main__':
     if(args.chimera):
         renderer = chimeraRenderer(path, args)
     else:
+        print(job.jobType())
         if(job.jobType() == "Class3D"):
             job = class3D(path)
-        elif(job.jobType() == "Class3D"):
-            #job = refine3D(path)
-            pass
+        elif(job.jobType() == "Refine3D"):
+            job = refine3D(path)
 
 
         if(args.i):
