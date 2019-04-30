@@ -8,7 +8,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 import os
 import subprocess
 import sys
-import numpy as np
 from datetime import datetime
 
 
@@ -95,6 +94,9 @@ class starTable():
         paramTable = self.table[parameter]
         paramTable.unstack().plot(kind='line')
 
+    def get(self,columnName):
+        return self.table[columnName]
+
     def __init__(self, starFiles, tableName):
         self.starFiles = starFiles
         self.tableName = tableName
@@ -144,6 +146,13 @@ class relionJob():
         modelStars.sort(key=self.__sortModelStars)
         return modelStars
 
+    def __readPipeline(self):
+        #print("Parsing job_pipeline.star")
+        pipelineStars = glob.glob(self.path + '/job_pipeline.star')
+        if len(pipelineStars) != 1:
+            raise Exception("ERROR: Looked for exactly 1 pipeline.star file, found " + str(len(pipelineStars)) + ".")
+        return pipelineStars
+
     def __getJobName(self):
         split = self.path.split("/")
         return split[len(split)-1]
@@ -169,10 +178,17 @@ class relionJob():
                 plt.close()
         pp.close()
 
+    def jobType(self):
+        self.pipeline = starTable(self.__readPipeline(), "data_pipeline_processes")
+        x = self.pipeline.get("rlnPipeLineProcessName")[0]
+        jobType = x.iloc[0].split("/")[0]
+        return jobType
+
     def __init__(self, path):
         self.path = os.path.abspath(path)
         self.jobName = self.__getJobName()
         self.modelStars = self.__readModelStars()
+    
 
 
 class class3D(relionJob):
@@ -396,10 +412,17 @@ if __name__ == '__main__':
     """ If this script is called from chimera, then args.chimera = True
     If this is the case, we run a totally different script than if it were
     called by the used alone"""
+    job = relionJob(path)
     if(args.chimera):
         renderer = chimeraRenderer(path, args)
     else:
-        job = class3D(path)
+        if(job.jobType() == "Class3D"):
+            job = class3D(path)
+        elif(job.jobType() == "Class3D"):
+            #job = refine3D(path)
+            pass
+
+
         if(args.i):
             job.graph()
         if(args.m):
