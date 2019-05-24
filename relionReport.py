@@ -60,7 +60,6 @@ class starTable():
         foundheader = False
         ln = 0
         lb = 0
-        #print("starFile:", starFile)
         with open(starFile, "r") as star:
             for line in star:
                 if line.startswith(self.tableName):
@@ -111,20 +110,6 @@ class starTable():
                                axis=0, keys=iterations.keys())
         self.table.to_html("meta.html")
 
-        """
-        for i in self.table.keys():
-        print(i)
-        self.table.unstack()
-        self.table.to_html("met1.html")
-        print(self.table)
-        self.df = self.__parseStar()
-        resolutions = self.table["rlnClassDistribution"]
-        print(self.table["rlnEstimatedResolution"][0])
-        resolutions.unstack().plot(kind='line')
-        plt.show()
-        print(p)
-        """
-
 
 class relionJob():
     tables = []  # A list of starTables
@@ -142,7 +127,6 @@ class relionJob():
         return it
 
     def __readModelStars(self):
-        #print("Parsing model.star files")
         modelStars = glob.glob(self.path + '/run_*t*model.star')
         if len(modelStars) == 0:
             raise Exception("ERROR: Could not find a model.star file")
@@ -150,7 +134,6 @@ class relionJob():
         return modelStars
 
     def __readPipeline(self):
-        #print("Parsing job_pipeline.star")
         pipelineStars = glob.glob(self.path + '/job_pipeline.star')
         if len(pipelineStars) != 1:
             raise Exception(
@@ -166,6 +149,7 @@ class relionJob():
         self.tables.append(table)
 
     def graph(self):
+        """For each parameter, graph that parameter from the table"""
         for t in self.tables:
             for p in self.parameters:
                 print(p)
@@ -176,55 +160,8 @@ class relionJob():
         """This method should be implemented in the subclass to ensure that they format the graph how they want."""
         pass
 
-    def graphToPDF(self):
-        pp = PdfPages(self.jobName + '.pdf')
-        style = args.s[0]
-        print("Using style " + style)
-        print("Saving graphs as " + self.jobName + ".pdf")
-        for t in self.tables:
-            for p in self.parameters:
-                # Use the style input with -s, defualt to seaborn-paper
-                plt.style.use(style)
-                t.graph(p)
-
-                # Take the title and ylabel from the parameter name, removing "rln"
-                plt.title(p[3:])
-                plt.ylabel(p[3:])
-                self.format(plt)
-                pp.savefig()
-                plt.close()
-        pp.close()
-
-    def jobType(self):
-        self.pipeline = starTable(
-            self.__readPipeline(), "data_pipeline_processes")
-        x = self.pipeline.get("rlnPipeLineProcessName")[0]
-        jobType = x.iloc[0].split("/")[0]
-        return jobType
-
-    def __init__(self, path):
-        self.path = os.path.abspath(path)
-        self.jobName = self.__getJobName()
-        self.modelStars = self.__readModelStars()
-
-
-class class3D(relionJob):
-
-    def __addParameters(self):
-        self.parameters.append("rlnClassDistribution")
-        self.parameters.append("rlnEstimatedResolution")
-        self.parameters.append("rlnAccuracyRotations")
-        self.parameters.append("rlnAccuracyTranslations")
-
-    def format(self, p):
-        p.legend(loc='upper left', title="Classes")
-        p.xlabel("Iteration")
-
-    def getTable(self):
-        # If we have the starTable, return it, if not parse it
-        pass
-
     def renderMovie(self):
+        """Sets up the script to be run from chimera so it will render a movie."""
         chimera = ""  # Enter your chimera executable location here
         if sys.platform == "linux" or sys.platform == "linux2":
             # linux
@@ -244,11 +181,66 @@ class class3D(relionJob):
             argsString += "-r "
         if(args.hr):
             argsString += "-hr "
+        imagePath = self.path + "Images"
         subprocess.run(chimera + " --script " + "\"" +
-                       selfPath + " -chimera " + argsString + self.path + "\"", shell=True)
+                       selfPath + " -chimera -type " + self.jobType() + " " + argsString + self.path + "\"", shell=True)
+        os.chdir(imagePath)
+        print(os.getcwd())
+        try:
+            subprocess.call(
+                "ffmpeg -r 10 -f image2 -s 1920x1080 -i frame%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4", shell=True)
+        except:
+            print(
+                "Rendering frames into movie failed. Check that you have ffmpeg installed")
+            print("Try manually running the command from the chimeraImages folder: ffmpeg -r 10 -f image2 -s 1920x1080 -i it%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p movie.mp4")
 
-    def numClasses(self):
-        pass
+    def graphToPDF(self):
+        """Save the graphs to a pdf with the job name"""
+        pp = PdfPages(self.jobName + '.pdf')
+        style = args.s[0]
+        print("Using style " + style)
+        print("Saving graphs as " + self.jobName + ".pdf")
+        for t in self.tables:
+            for p in self.parameters:
+                # Use the style input with -s, defualt to seaborn-paper
+                plt.style.use(style)
+                t.graph(p)
+
+                # Take the title and ylabel from the parameter name, removing "rln"
+                plt.title(p[3:])
+                plt.ylabel(p[3:])
+                self.format(plt)
+                pp.savefig()
+                plt.close()
+        pp.close()
+
+    def jobType(self):
+        """Determine the job type by reading the pipeline file"""
+        self.pipeline = starTable(
+            self.__readPipeline(), "data_pipeline_processes")
+        x = self.pipeline.get("rlnPipeLineProcessName")[0]
+        jobType = x.iloc[0].split("/")[0]
+        return jobType
+
+    def __init__(self, path):
+        self.path = os.path.abspath(path)
+        self.jobName = self.__getJobName()
+        self.modelStars = self.__readModelStars()
+
+
+class class3D(relionJob):
+
+    def __addParameters(self):
+        """Defines the parameters to be graphed"""
+        self.parameters.append("rlnClassDistribution")
+        self.parameters.append("rlnEstimatedResolution")
+        self.parameters.append("rlnAccuracyRotations")
+        self.parameters.append("rlnAccuracyTranslations")
+
+    def format(self, p):
+        """Graph formatting rules for class3D"""
+        p.legend(loc='upper left', title="Classes")
+        p.xlabel("Iteration")
 
     def __init__(self, path):
         super(class3D, self).__init__(path)
@@ -260,7 +252,7 @@ class class3D(relionJob):
 class refine3D(relionJob):
 
     def __readModelStars(self):
-        #print("Parsing model.star files")
+        """Overriding __readModelStars in relionJob, need to make it so it only reads the half1_model.stars"""
         modelStars = glob.glob(self.path + '/run_*t*half1_model.star')
         if len(modelStars) == 0:
             raise Exception("ERROR: Could not find a model.star file")
@@ -270,9 +262,13 @@ class refine3D(relionJob):
         return modelStars
 
     def format(self, p):
+        """Graph formatting rules for refine3D, notably, has no legend"""
         p.xlabel("Iteration")
+        ax = p.gca()
+        ax.get_legend().remove()
 
     def __addParameters(self):
+        """Defines the parameters to be graphed"""
         self.parameters.append("rlnEstimatedResolution")
         self.parameters.append("rlnAccuracyRotations")
         self.parameters.append("rlnAccuracyTranslations")
@@ -318,6 +314,8 @@ class chimeraRenderer():
         with the classes for that iteration in order """
 
         mrcs = glob.glob(self.path + '/*.mrc')
+        if(self.jobType == "Refine3D"):
+            mrcs = glob.glob(self.path + '/*half1_class001.mrc')
         if len(mrcs) == 0:
             raise Exception("ERROR: Could not find any mrc files")
         mrcs.sort(key=self.__sortMrcs)
@@ -331,11 +329,17 @@ class chimeraRenderer():
                 iterations[it] = iterations[it] + [fn]
             else:
                 iterations[it] = [fn]
+
+        # If we're rendering a refinement, add the maximixed version as the final iteration
+        if(self.jobType == "Refine3D"):
+            iterations[it+1] = glob.glob(self.path + '/run_class001.mrc')
+
         for k in iterations.keys():
             iterations[k].sort(key=self.__sortClasses)
         return iterations
 
     def __saveImage(self, png_name, raytrace, flat, highRes, closeModelsAfterSaving=True, autoFitWindow=True):
+        """Save an image from chimera into the output folder"""
         try:
             from chimera import runCommand as rc
         except:
@@ -369,6 +373,7 @@ class chimeraRenderer():
             rc("close all")
 
     def render(self):
+        """Render frames of the iterations in chimera"""
         try:
             from chimera import runCommand as rc
         except:
@@ -378,7 +383,9 @@ class chimeraRenderer():
             rc("cd " + self.path)
             for c in self.iterations[it]:
                 rc("open " + c)
-                rc("volume #" + str(modelNum) + " sdlevel 7")
+                rc("volume #" + str(modelNum) + " sdlevel 8")
+                if(self.jobType == "Refine3D"):
+                    rc("volume #" + str(modelNum) + " sdlevel 10")
                 modelNum += 1
             rc("volume all step 1")
             rc("tile")
@@ -400,7 +407,9 @@ class chimeraRenderer():
         rc("cd " + path)
         for c in self.iterations[it]:
             rc("open " + c)
-            rc("volume #" + str(modelNum) + " sdlevel 7")
+            rc("volume #" + str(modelNum) + " sdlevel 8")
+            if(self.jobType == "Refine3D"):
+                rc("volume #" + str(modelNum) + " sdlevel 10")
             modelNum += 1
         rc("volume all step 1")
         rc("tile")
@@ -418,6 +427,7 @@ class chimeraRenderer():
         rc("stop now")
 
     def makeOutputFolder(self):
+        """Create the jobImages output folder"""
         self.current = self.__getCurrentDirectory()
         self.jobName = self.__getJobName()
         self.output = self.current + "/" + self.jobName + "Images"
@@ -428,6 +438,9 @@ class chimeraRenderer():
 
     def __init__(self, path, args):
         self.path = path
+        self.jobType = args.type[0]
+        subprocess.call("echo \"Recognized by Chimera as " +
+                        self.jobType + "\"", shell=True)
         self.makeOutputFolder()
         self.iterations = self.__readMrcs()
         self.render()
@@ -452,7 +465,9 @@ def parseArgs():
     parser.add_argument(
         '-s', nargs=1, default=["seaborn-paper"], help='Use this argument to define which style matplotlib will use to plot the graphs.')
     parser.add_argument(
-        '-chimera', dest='chimera', action='store_true', help='Execute the script run from chimera')
+        '-chimera', dest='chimera', action='store_true', help='Execute the script run from chimera, should not be used by any user')
+    parser.add_argument(
+        '-type', nargs=1, help='Input the job type, should not be used by any user')
     args = parser.parse_args()
     return args
 
@@ -481,7 +496,7 @@ if __name__ == '__main__':
 
 """
 TODO:
--Make the graphs autoformat in a nice matter. Right now I have nothing.
--Make the class for 3D refinements
 -Make it not crash when filling the table with N/A values, such as during a alignment free classification
+-Make it work with ChimeraX
+-Make sure that the Refine3D videos are representative. Try with a more dramatic refinement, i couldn't really see any improvement in the one I did.
 """
