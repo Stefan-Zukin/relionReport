@@ -94,7 +94,7 @@ class starTable():
         paramTable = self.table[parameter]
         paramTable.unstack().plot(kind='line')
 
-    def get(self,columnName):
+    def get(self, columnName):
         return self.table[columnName]
 
     def __init__(self, starFiles, tableName):
@@ -110,24 +110,27 @@ class starTable():
         self.table = pd.concat(iterations.values(),
                                axis=0, keys=iterations.keys())
         self.table.to_html("meta.html")
-        # for i in self.table.keys():
-        # print(i)
-        # self.table.unstack()
-        # self.table.to_html("met1.html")
-        # print(self.table)
-        #self.df = self.__parseStar()
-        #resolutions = self.table["rlnClassDistribution"]
-        # print(self.table["rlnEstimatedResolution"][0])
-        # resolutions.unstack().plot(kind='line')
-        # plt.show()
-        # print(p)
+
+        """
+        for i in self.table.keys():
+        print(i)
+        self.table.unstack()
+        self.table.to_html("met1.html")
+        print(self.table)
+        self.df = self.__parseStar()
+        resolutions = self.table["rlnClassDistribution"]
+        print(self.table["rlnEstimatedResolution"][0])
+        resolutions.unstack().plot(kind='line')
+        plt.show()
+        print(p)
+        """
 
 
 class relionJob():
-    tables = []
-    parameters = []
+    tables = []  # A list of starTables
+    parameters = []  # A list of strings
 
-    def __sortModelStars(self, model=" "):
+    def sortModelStars(self, model=" "):
         """Sorting method which sorts model.star files by iteration number
         Important to do this double split, to get only the filename of the .star
         Otherwise had a bug if enclosing folders had 'it" in the name, like /titan/"""
@@ -143,14 +146,15 @@ class relionJob():
         modelStars = glob.glob(self.path + '/run_*t*model.star')
         if len(modelStars) == 0:
             raise Exception("ERROR: Could not find a model.star file")
-        modelStars.sort(key=self.__sortModelStars)
+        modelStars.sort(key=self.sortModelStars)
         return modelStars
 
     def __readPipeline(self):
         #print("Parsing job_pipeline.star")
         pipelineStars = glob.glob(self.path + '/job_pipeline.star')
         if len(pipelineStars) != 1:
-            raise Exception("ERROR: Looked for exactly 1 pipeline.star file, found " + str(len(pipelineStars)) + ".")
+            raise Exception(
+                "ERROR: Looked for exactly 1 pipeline.star file, found " + str(len(pipelineStars)) + ".")
         return pipelineStars
 
     def __getJobName(self):
@@ -168,18 +172,32 @@ class relionJob():
                 t.graph(p)
         plt.show()
 
+    def format(self, p):
+        """This method should be implemented in the subclass to ensure that they format the graph how they want."""
+        pass
+
     def graphToPDF(self):
         pp = PdfPages(self.jobName + '.pdf')
+        style = args.s[0]
+        print("Using style " + style)
         print("Saving graphs as " + self.jobName + ".pdf")
         for t in self.tables:
             for p in self.parameters:
+                # Use the style input with -s, defualt to seaborn-paper
+                plt.style.use(style)
                 t.graph(p)
+
+                # Take the title and ylabel from the parameter name, removing "rln"
+                plt.title(p[3:])
+                plt.ylabel(p[3:])
+                self.format(plt)
                 pp.savefig()
                 plt.close()
         pp.close()
 
     def jobType(self):
-        self.pipeline = starTable(self.__readPipeline(), "data_pipeline_processes")
+        self.pipeline = starTable(
+            self.__readPipeline(), "data_pipeline_processes")
         x = self.pipeline.get("rlnPipeLineProcessName")[0]
         jobType = x.iloc[0].split("/")[0]
         return jobType
@@ -188,7 +206,6 @@ class relionJob():
         self.path = os.path.abspath(path)
         self.jobName = self.__getJobName()
         self.modelStars = self.__readModelStars()
-    
 
 
 class class3D(relionJob):
@@ -199,12 +216,16 @@ class class3D(relionJob):
         self.parameters.append("rlnAccuracyRotations")
         self.parameters.append("rlnAccuracyTranslations")
 
+    def format(self, p):
+        p.legend(loc='upper left', title="Classes")
+        p.xlabel("Iteration")
+
     def getTable(self):
         # If we have the starTable, return it, if not parse it
         pass
 
     def renderMovie(self):
-        chimera = "" #Enter your chimera executable location here
+        chimera = ""  # Enter your chimera executable location here
         if sys.platform == "linux" or sys.platform == "linux2":
             # linux
             chimera = "/programs/x86_64-linux/chimera/1.13.1/bin/chimera"
@@ -214,7 +235,7 @@ class class3D(relionJob):
         else:
             if(chimera == ""):
                 raise Exception("Your operating system was not recognized so the script cannot auto-detect your chimera executable location. "
-                            + "Please manually edit the script to include your chimera executable location at line 190")
+                                + "Please manually edit the script to include your chimera executable location at line 190")
         selfPath = os.path.realpath(__file__)
         argsString = " "
         if(args.f):
@@ -235,22 +256,27 @@ class class3D(relionJob):
         self.read("data_model_classes")
         self.graphToPDF()
 
+
 class refine3D(relionJob):
-    
+
     def __readModelStars(self):
         #print("Parsing model.star files")
         modelStars = glob.glob(self.path + '/run_*t*half1_model.star')
-        for name in modelStars:
-            print(name)
         if len(modelStars) == 0:
             raise Exception("ERROR: Could not find a model.star file")
-        #modelStars.sort(key=super.__sortModelStars)
+        modelStars.sort(key=super(refine3D, self).sortModelStars)
+        for name in modelStars:
+            print(name)
         return modelStars
+
+    def format(self, p):
+        p.xlabel("Iteration")
 
     def __addParameters(self):
         self.parameters.append("rlnEstimatedResolution")
         self.parameters.append("rlnAccuracyRotations")
         self.parameters.append("rlnAccuracyTranslations")
+        self.parameters.append("rlnOverallFourierCompleteness")
 
     def __init__(self, path):
         super(refine3D, self).__init__(path)
@@ -258,7 +284,6 @@ class refine3D(relionJob):
         self.__addParameters()
         self.read("data_model_classes")
         self.graphToPDF()
-
 
 
 class chimeraRenderer():
@@ -339,7 +364,7 @@ class chimeraRenderer():
             rc("lighting mode two-point")
             rc("set silhouetteWidth 4")
         rc("copy file " + png_name +
-                   " supersample 4 " + raytraceString + resolutionString)
+           " supersample 4 " + raytraceString + resolutionString)
         if closeModelsAfterSaving:
             rc("close all")
 
@@ -425,6 +450,8 @@ def parseArgs():
     parser.add_argument(
         '-hr', dest='hr', action='store_true', help='Render higher resolution images. Will make the process slower.')
     parser.add_argument(
+        '-s', nargs=1, default=["seaborn-paper"], help='Use this argument to define which style matplotlib will use to plot the graphs.')
+    parser.add_argument(
         '-chimera', dest='chimera', action='store_true', help='Execute the script run from chimera')
     args = parser.parse_args()
     return args
@@ -441,12 +468,11 @@ if __name__ == '__main__':
     if(args.chimera):
         renderer = chimeraRenderer(path, args)
     else:
-        print(job.jobType())
+        print("Recognized job as " + job.jobType())
         if(job.jobType() == "Class3D"):
             job = class3D(path)
         elif(job.jobType() == "Refine3D"):
             job = refine3D(path)
-
 
         if(args.i):
             job.graph()
