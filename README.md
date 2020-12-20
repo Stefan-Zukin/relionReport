@@ -3,9 +3,53 @@ RelionReport is a tool which generates a report and animation from a given relio
 RelionReport aims to give more meaningful output from relion jobs to aid in making processing decisions and presenting processing data.
 
 ![GitHub Logo](/images/distribution.png)
-![GitHub Logo](/images/resolution.png)
 
-##Installation
+## Installation
 To run relionReport, you need a python environment with glob2, pandas and matplotlib installed. These libraries can be installed with pip or conda.
+
 `pip install glob2 pandas matplotlib`
+
 `conda create --name relionReport glob2 pandas matplotlib`
+
+If you wish to create movies using relionReport, you also need ChimeraX and ffmpeg installed as well.
+
+## Use
+To generate a report, execute relionReport.py and pass your job folder in as an argument.
+
+`python3 relionReport.py Class3D/job022`
+
+This will create a report titled job022.pdf in the current working directory.
+
+To also generate a movie of the job in ChimeraX, add the `-m` flag to your command.
+
+`python3 relionReport.py -m Class3D/job022`
+
+This will create a folder titled job022Images in the current working directory, which contains individual frames and the final rendered movie.
+
+## Parameters
+
+#### -i
+
+-i opens the graphs in interactive mode, so you can modify them and save particular views
+
+`python3 relionReport.py -i Class3D/job022`
+
+#### -style [style]
+-style allows you to specify a matplotlib style to be used when creating the report. The default is seaborn-paper.
+
+`python3 relionReport.py -style ggplot Class3D/job022`
+
+#### -v [ChimeraX commands]
+
+-v allows you to specify ChimeraX commands to be executed before saving an image. This gives flexible control over visual style in ChimeraX.
+The command should be enclosed in quotations and separate commands should be separated by semicolons.
+
+`python3 relionReport.py -v "lighting flat; set silhouetteWidth 2" Class3D/job022`
+
+#### -s [ChimeraX commands]
+
+-s allows you to specify the parameters for ChimeraX image saving. This gives control over the output resolution, transparency and supersample levels.
+The command should be enclosed in quotations.
+
+`python3 relionReport.py -s "supersample 8 width 2048 height 2048 transparentBackground true" Class3D/job022`
+`
