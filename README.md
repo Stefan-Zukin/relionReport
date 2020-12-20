@@ -60,4 +60,3 @@ The command should be enclosed in quotations.
 ## Other Notes
 
 By default, ChimeraX sets the map levels at sdlevel = 6. This might be too high or too low a level depending on your particular project. To change the level, open relionReport.py in a text editor, and modify the line `LEVEL = 6` to your desired sdlevel.
-`
