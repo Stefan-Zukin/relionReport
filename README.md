@@ -11,7 +11,7 @@ To run relionReport, you need a python environment with glob2, pandas and matplo
 
 `conda create --name relionReport glob2 pandas matplotlib`
 
-If you wish to create movies using relionReport, you also need ChimeraX and ffmpeg installed as well.
+If you wish to create movies using relionReport, you need ChimeraX and ffmpeg installed as well.
 
 ## Use
 To generate a report, execute relionReport.py and pass your job folder in as an argument.
