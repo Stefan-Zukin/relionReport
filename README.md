@@ -11,7 +11,11 @@ To run relionReport, you need a python environment with glob2, pandas and matplo
 
 `conda create --name relionReport glob2 pandas matplotlib`
 
-If you wish to create movies using relionReport, you need ChimeraX and ffmpeg installed as well.
+If you wish to create movies using relionReport, you need ChimeraX and ffmpeg installed as well. You must also specify where your ChimeraX executable file is located. To do this, open relionReport.py in a text editor, and modify the line
+
+`CHIMERA_PATH = "/Applications/ChimeraX-1.1.1.app/Contents/MacOS/ChimeraX"` 
+
+to specify the path to your ChimeraX executible. On linux, this is usually `/programs/x86_64-linux/chimera/1.13.1/bin/chimera`. On mac it is usually `/Applications/Chimera.app/Contents/MacOS/chimera`.
 
 ## Use
 To generate a report, execute relionReport.py and pass your job folder in as an argument.
@@ -52,4 +56,8 @@ The command should be enclosed in quotations and separate commands should be sep
 The command should be enclosed in quotations.
 
 `python3 relionReport.py -s "supersample 8 width 2048 height 2048 transparentBackground true" Class3D/job022`
+
+## Other Notes
+
+By default, ChimeraX sets the map levels at sdlevel = 6. This might be too high or too low a level depending on your particular project. To change the level, open relionReport.py in a text editor, and modify the line `LEVEL = 6` to your desired sdlevel.
 `
