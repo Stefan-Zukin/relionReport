@@ -20,8 +20,6 @@ except:
 CHIMERA_PATH = "/Applications/ChimeraX-1.1.1.app/Contents/MacOS/ChimeraX"
 LEVEL = 6
 
-#"Example: relion_reportX % python relionReportX.py -v "lighting flat" -s "supersample 2 width 100 height 100 transparentBackground true" -m Class3D/job029"
-
 class starTable():
 
     def __readModelGeneral(self, starFile):
@@ -168,11 +166,7 @@ class relionJob():
     def renderMovie(self):
         """Sets up the script to be run from chimera so it will render a movie."""
         print("Connecting to ChimeraX")
-        chimera = CHIMERA_PATH  # Enter your chimera executable location here
-        # linux
-        #chimera = "/programs/x86_64-linux/chimera/1.13.1/bin/chimera"
-        # OS X
-        #chimera = "/Applications/Chimera.app/Contents/MacOS/chimera"
+        chimera = CHIMERA_PATH
         if(chimera == ""):
             raise Exception("Your operating system was not recognized so the script cannot auto-detect your chimera executable location. "
                             + "Please manually edit the script to include your chimera executable location at line 165")
@@ -486,10 +480,7 @@ if __name__ == '__main__':
 """
 TODO:
 -Make it not crash when filling the table with N/A values, such as during a alignment free classification (This seems to be fine...)
--Make it work with ChimeraX
--Make sure that the Refine3D videos are representative. Try with a more dramatic refinement, i couldn't really see any improvement in the one I did.
 -If a job is continued twice, ie. ct_20 & ct_30, the ct_30 will have double the data because 
  it will already increment by one for ct_20 and won't know to increment by 2 for ct_30
- Maybe make it able to set the SD level manually, currently would have to edit the script
-    Maybe make global variablse at the top that can be easily edited.
+-Maybe make it able to set the SD level manually, currently would have to edit the script
 """
