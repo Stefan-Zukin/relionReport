@@ -49,14 +49,14 @@ This will create a folder titled job022Images in the current working directory, 
 -v allows you to specify ChimeraX commands to be executed before saving an image. This gives flexible control over visual style in ChimeraX.
 The command should be enclosed in quotations and separate commands should be separated by semicolons.
 
-`python3 relionReport.py -v "lighting flat; set silhouetteWidth 2" Class3D/job022`
+`python3 relionReport.py -m -v "lighting flat; set silhouetteWidth 2" Class3D/job022`
 
 #### -s [ChimeraX commands]
 
 -s allows you to specify the parameters for ChimeraX image saving. This gives control over the output resolution, transparency and supersample levels.
 The command should be enclosed in quotations.
 
-`python3 relionReport.py -s "supersample 8 width 2048 height 2048 transparentBackground true" Class3D/job022`
+`python3 relionReport.py -m -s "supersample 8 width 2048 height 2048 transparentBackground true" Class3D/job022`
 
 ## Other Notes
 
