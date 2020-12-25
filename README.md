@@ -3,7 +3,7 @@ RelionReport is a tool which generates a report and animation from a given relio
 RelionReport aims to give more meaningful output from relion jobs to aid in making processing decisions and presenting processing data.
 This program was built and tested using Relion 3.1 and ChimeraX 1.1. It may work with other versions, but some versions of Relion have different column names in their data tables which causes errors.
 
-![GitHub Logo](/images/distribution.png)
+![Distribution Graph](/images/distribution.png)
 
 ## Installation
 To run relionReport, you need a python environment with glob2, pandas and matplotlib installed. These libraries can be installed with pip or conda.
